@@ -42,7 +42,8 @@
     "Phakorn Kiong (https://github.com/PhakornKiong)",
     "Donald Ness (https://github.com/programmarchy)",
     "Remus DRAICA (https://github.com/remdra)",
-    "David Abdala (https://github.com/adnsistemas)"
+    "David Abdala (https://github.com/adnsistemas)",
+    "Eran Ohayon (https://github.com/erano067)"
   ],
   "scripts": {
     "release": "yarn release:prep && release-it",

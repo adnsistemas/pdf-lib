@@ -1698,7 +1698,9 @@ export default class PDFDocument {
   }
 
   /**
-   * Commit the current changes to the document as an incremental update.
+   * Saves the current changes to the document as an incremental update, returns the full document,
+   * like save method, and modifies the internal state to be able to continue editing the document
+   * for another incremental update.
    * This allows you to save multiple incremental updates without reloading the PDF.
    *
    * For example:
@@ -1707,25 +1709,28 @@ export default class PDFDocument {
    *
    * const page = pdfDoc.getPage(0)
    * page.drawText('First update')
-   * const firstCommit = await pdfDoc.commit()
+   * const firstsave = await pdfDoc.saveAndContinue()
    *
    * page.drawText('Second update', { y: 100 })
-   * const secondCommit = await pdfDoc.commit()
+   * const secondsave = await pdfDoc.saveAndContinue()
    * ```
    *
-   * @param options The options to be used when committing changes.
+   * @param options The options to be used when saving changes.
    * @returns Resolves with the complete PDF bytes including all updates.
    */
-  async commit(options: IncrementalSaveOptions = {}): Promise<Uint8Array> {
-    const snapshot = this.context.snapshot || this.takeSnapshot();
-    const incrementalBytes = await this.saveIncremental(snapshot, options);
-
-    const originalBytes = this.context.pdfFileDetails.originalBytes;
-    if (!originalBytes) {
+  async saveAndContinue(
+    options: IncrementalSaveOptions = {},
+  ): Promise<Uint8Array> {
+    if (!this.context.pdfFileDetails.originalBytes || !this.context.snapshot) {
       throw new Error(
-        'commit() requires the document to be loaded with forIncrementalUpdate: true',
+        'saveAndContinue() requires the document to be loaded with forIncrementalUpdate: true',
       );
     }
+    const originalBytes = this.context.pdfFileDetails.originalBytes;
+    const incrementalBytes = await this.saveIncremental(
+      this.context.snapshot,
+      options,
+    );
 
     const newPdfBytes = new Uint8Array(
       originalBytes.byteLength + incrementalBytes.byteLength,
@@ -1747,8 +1752,7 @@ export default class PDFDocument {
       this.context.pdfFileDetails.prevStartXRef = originalBytes.byteLength;
     }
 
-    const newSnapshot = this.takeSnapshot();
-    this.context.snapshot = newSnapshot;
+    this.context.snapshot = this.takeSnapshot();
 
     return newPdfBytes;
   }
