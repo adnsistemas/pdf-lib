@@ -42,7 +42,7 @@ export default async (assets: Assets) => {
     color: rgb(0.2, 0.2, 0.8),
   });
 
-  await pdfDoc2.commit();
+  await pdfDoc2.saveAndContinue();
   console.log('After commit 1: Pages =', pdfDoc2.getPageCount());
 
   // --- Second Commit ---
@@ -67,7 +67,7 @@ export default async (assets: Assets) => {
     height: catDims.height,
   });
 
-  await pdfDoc2.commit();
+  await pdfDoc2.saveAndContinue();
   console.log('After commit 2: Pages =', pdfDoc2.getPageCount());
 
   // --- Third Commit ---
@@ -100,7 +100,7 @@ export default async (assets: Assets) => {
     height: catDims.height / 2,
   });
 
-  await pdfDoc2.commit();
+  await pdfDoc2.saveAndContinue();
   console.log('After commit 3: Pages =', pdfDoc2.getPageCount());
 
   // --- Fourth Commit ---
@@ -124,7 +124,7 @@ export default async (assets: Assets) => {
     color: rgb(0.6, 0.2, 0.6),
   });
 
-  const finalBytes = await pdfDoc2.commit();
+  const finalBytes = await pdfDoc2.saveAndContinue();
   console.log('After commit 4: Pages =', pdfDoc2.getPageCount());
 
   console.log('Final document size:', finalBytes.length, 'bytes');

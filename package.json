@@ -101,8 +101,8 @@
     "yarn.lock"
   ],
   "dependencies": {
+    "@adnsistemas/upng": "^1.0.2",
     "@pdf-lib/standard-fonts": "^1.0.0",
-    "@pdf-lib/upng": "^1.0.1",
     "color": "^4.2.3",
     "crypto-js": "^4.2.0",
     "node-html-better-parser": "^1.4.0",
