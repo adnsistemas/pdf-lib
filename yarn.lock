@@ -2,10 +2,10 @@
 # yarn lockfile v1
 
 
-"@adnsistemas/upng@^1.0.2":
-  version "1.0.2"
-  resolved "https://registry.npmjs.org/@adnsistemas/upng/-/upng-1.0.2.tgz"
-  integrity sha512-FPfsaB7fW9+qzt7PSpnZCc4w9t+ywMH5IfPStad+ao/c6jsQxp699HEq8xiM+iIJGusoqjjhQZMwSJ7NeIKknw==
+"@adnsistemas/upng@^1.0.3":
+  version "1.0.3"
+  resolved "https://registry.npmjs.org/@adnsistemas/upng/-/upng-1.0.3.tgz"
+  integrity sha512-NFvcGsilB79BxXtGKT+oRjzG4Ksr4Dg4t00x//PQgiE4PtRmyA9vWCRdCNhMVmWXHkuimcC5mkyqvsbHiUJufA==
   dependencies:
     pako "^1.0.10"
 
