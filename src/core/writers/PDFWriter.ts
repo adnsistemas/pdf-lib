@@ -17,6 +17,8 @@ import { copyStringIntoBuffer, waitForTick } from '../../utils';
 import PDFNumber from '../objects/PDFNumber';
 import PDFSecurity from '../security/PDFSecurity';
 import PDFStream from '../objects/PDFStream';
+import PDFName from '../objects/PDFName';
+import PDFRawStream from '../objects/PDFRawStream';
 
 export interface SerializationInfo {
   size: number;
@@ -53,6 +55,29 @@ class PDFWriter {
     this.snapshot = snapshot;
   }
 
+  /**
+   * For incremental saves, defers the decision to the snapshot.
+   * For full saves, checks that the object is not an XRef stream object.
+   * @param {boolean} incremental If making an incremental save, or a full save of the PDF
+   * @param {number} objNum Object number
+   * @param {PDFObject} object PDFObject used to check if it is an XRef stream, when not 'incremental' saving
+   * @returns {boolean} whether the object should be saved or not
+   */
+  protected shouldSave(
+    incremental: boolean,
+    objNum: number,
+    object: PDFObject,
+  ): boolean {
+    if (incremental) {
+      return this.snapshot.shouldSave(objNum);
+    } else {
+      return !(
+        object instanceof PDFRawStream &&
+        object.dict.lookup(PDFName.of('Type')) === PDFName.of('XRef')
+      );
+    }
+  }
+
   async serializeToBuffer(): Promise<Uint8Array> {
     const incremental = !(this.snapshot instanceof DefaultDocumentSnapshot);
     const { size, header, indirectObjects, xref, trailerDict, trailer } =
@@ -70,7 +95,7 @@ class PDFWriter {
     for (let idx = 0, len = indirectObjects.length; idx < len; idx++) {
       const [ref, object] = indirectObjects[idx];
 
-      if (!this.snapshot.shouldSave(ref.objectNumber)) {
+      if (!this.shouldSave(incremental, ref.objectNumber, object)) {
         continue;
       }
 
@@ -160,7 +185,7 @@ class PDFWriter {
     for (let idx = 0, len = indirectObjects.length; idx < len; idx++) {
       const indirectObject = indirectObjects[idx];
       const [ref, object] = indirectObject;
-      if (!this.snapshot.shouldSave(ref.objectNumber)) continue;
+      if (!this.shouldSave(incremental, ref.objectNumber, object)) continue;
       if (security) this.encrypt(ref, object, security);
       xref.addEntry(ref, size);
       size += this.computeIndirectObjectSize(indirectObject);
