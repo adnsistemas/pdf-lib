@@ -43,7 +43,9 @@
     "Donald Ness (https://github.com/programmarchy)",
     "Remus DRAICA (https://github.com/remdra)",
     "David Abdala (https://github.com/adnsistemas)",
-    "Eran Ohayon (https://github.com/erano067)"
+    "Eran Ohayon (https://github.com/erano067)",
+    "Shaun Verch (https://github.com/sverch)",
+    "Guido Flohr (https://github.com/gflohr)"
   ],
   "scripts": {
     "release": "yarn release:prep && release-it",
