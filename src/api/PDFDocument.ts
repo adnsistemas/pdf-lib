@@ -82,7 +82,7 @@ import PDFSecurity, { SecurityOptions } from '../core/security/PDFSecurity';
 import { IncrementalDocumentSnapshot } from './snapshot';
 import type { DocumentSnapshot } from './snapshot';
 
-export type PDFAttachment = {
+export type BasePDFAttachment = {
   name: string;
   data: Uint8Array;
   mimeType: string | undefined;
@@ -91,6 +91,17 @@ export type PDFAttachment = {
   creationDate: Date | undefined;
   modificationDate: Date | undefined;
 };
+
+export type SavedPDFAttachment = BasePDFAttachment & {
+  embeddedFileDict: PDFDict;
+  specRef: PDFRef;
+};
+
+export type UnsavedPDFAttachment = BasePDFAttachment & {
+  pdfEmbeddedFile: PDFEmbeddedFile;
+};
+
+export type PDFAttachment = UnsavedPDFAttachment | SavedPDFAttachment;
 
 export type PDFObjectVersions = {
   ref: PDFRef;
@@ -1011,15 +1022,19 @@ export default class PDFDocument {
     for (let idx = 0, len = EFNames.size(); idx < len; idx += 2) {
       const fileName = EFNames.lookup(idx) as PDFHexString | PDFString;
       const fileSpec = EFNames.lookup(idx + 1, PDFDict);
-      rawAttachments.push({ fileName, fileSpec });
+      rawAttachments.push({
+        fileName,
+        fileSpec,
+        specRef: EFNames.get(idx + 1) as PDFRef,
+      });
     }
 
     return rawAttachments;
   }
 
-  private getSavedAttachments(): PDFAttachment[] {
+  private getSavedAttachments(): SavedPDFAttachment[] {
     const rawAttachments = this.getRawAttachments();
-    return rawAttachments.flatMap(({ fileName, fileSpec }) => {
+    return rawAttachments.flatMap(({ fileName, fileSpec, specRef }) => {
       const efDict = fileSpec.lookup(PDFName.of('EF'));
       if (!(efDict instanceof PDFDict)) return [];
 
@@ -1062,9 +1077,12 @@ export default class PDFDocument {
         }
       }
 
-      const description = (
-        fileSpec.lookup(PDFName.of('Desc')) as PDFHexString
-      ).decodeText();
+      const descRaw = fileSpec.lookup(PDFName.of('Desc'));
+      let description: string | undefined;
+
+      if (descRaw instanceof PDFHexString) {
+        description = descRaw.decodeText();
+      }
 
       return [
         {
@@ -1077,13 +1095,16 @@ export default class PDFDocument {
           description,
           creationDate,
           modificationDate,
+          embeddedFileDict: efDict,
+          specRef,
         },
       ];
     });
   }
 
-  private getUnsavedAttachments(): PDFAttachment[] {
-    const attachments = this.embeddedFiles.map((file) => {
+  private getUnsavedAttachments(): UnsavedPDFAttachment[] {
+    const attachments = this.embeddedFiles.flatMap((file) => {
+      if (file.getAlreadyEmbedded()) return [];
       const embedder = file.getEmbedder();
 
       return {
@@ -1094,6 +1115,7 @@ export default class PDFDocument {
         afRelationship: embedder.options.afRelationship,
         creationDate: embedder.options.creationDate,
         modificationDate: embedder.options.modificationDate,
+        pdfEmbeddedFile: file,
       };
     });
 
@@ -1110,6 +1132,49 @@ export default class PDFDocument {
     const unsavedAttachments = this.getUnsavedAttachments();
 
     return [...savedAttachments, ...unsavedAttachments];
+  }
+
+  /**
+   * Removes an attachment from PDF, based on name.
+   * @param {string} name Name of the attachmet to remove.
+   */
+  detach(name: string) {
+    const attachedFiles = this.getAttachments();
+    attachedFiles.forEach((file) => {
+      if (file.name !== name) return;
+      // the file wasn't embedded into context yet
+      if ('pdfEmbeddedFile' in file) {
+        const i = this.embeddedFiles.findIndex(
+          (f) => file.pdfEmbeddedFile === f,
+        );
+        if (i !== undefined) this.embeddedFiles.splice(i, 1);
+      } else {
+        // remove references from catalog
+        const namesArr = this.catalog
+          .Names()
+          ?.lookup(PDFName.of('EmbeddedFiles'), PDFDict)
+          .lookup(PDFName.of('Names'), PDFArray);
+        const iNames = namesArr?.indexOf(file.specRef);
+        if (iNames !== undefined && iNames > 0) {
+          // attachment spec ref
+          namesArr?.remove(iNames);
+          // attachment name
+          namesArr?.remove(iNames - 1);
+        }
+        // AF-Tag for PDF-A3 compliance
+        const AF = this.catalog.AttachedFiles();
+        const afIndex = AF?.indexOf(file.specRef);
+        if (afIndex !== undefined) AF?.remove(afIndex);
+
+        // remove references from context
+        const streamRef = this.context
+          .lookupMaybe(file.specRef, PDFDict)
+          ?.lookupMaybe(PDFName.of('EF'), PDFDict)
+          ?.get(PDFName.of('F')) as PDFRef | undefined;
+        if (streamRef) this.context.delete(streamRef);
+        this.context.delete(file.specRef);
+      }
+    });
   }
 
   /**
