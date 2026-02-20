@@ -111,6 +111,7 @@ Install with: `npm install @adnsistemas/pdf-lib`
 - Read viewer preferences
 - Add attachments
 - Extract attachments
+- Delete attachments
 - Get PDFObjects modified in a specific update of the PDF (used to check for changes between electronic/digital signatures)
 
 ## Motivation
