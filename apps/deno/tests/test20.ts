@@ -16,6 +16,7 @@ import {
  * This test modifies the pdf adding a page and a placeholder for an electronic signature.
  * It also deletes the first page of the PDF.
  * The file should have an incremental update at the end, and the start of the file be exactly the original file.
+ * This is the "hard way", use @adnsistemas/placeholder-pdf-lib for the "easy way"
  */
 export default async (assets: Assets) => {
   const pdfDoc = await PDFDocument.load(assets.pdfs.simple, {

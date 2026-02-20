@@ -312,7 +312,8 @@ const pdfBytes = await pdfDoc.save({rewrite: true})
 ```
 
 #### Using pdf-lib to generate a placeholder for an electronic signature
-@signpdf includes a pdf-lib-placeholder component, but it is based on the pdf-lib package that has no incremental update functionality. This code is taken from that library and modified to use incremental update for not invalidating previous file signatures. Is an example, that can be seen in integration test #20, some @signpdf constants has been changed to arbitrary values for the example to work "out of the box".
+@signpdf includes a placeholder-pdf-lib component, but it is based on the pdf-lib package that has no incremental update functionality. This code is taken from that library and modified to use incremental update for not invalidating previous file signatures. Is an example, that can be seen in integration test #20, some @signpdf constants has been changed to arbitrary values for the example to work "out of the box".  
+If you need this functionality, you should take a look at [@adnsistemas/placeholder-pdf-lib](https://www.npmjs.com/package/@adnsistemas/placeholder-pdf-lib).
 
 <!-- prettier-ignore -->
 ```js
@@ -339,7 +340,7 @@ page.drawText(`Electronic Signature Example\nSigned on ${(new Date()).toIsoStrin
 });
 // Add an AcroForm or update the existing one
 let acroForm = pdfDoc.catalog.getOrCreateAcroForm();
-// Create a placeholder where the the last 3 parameters of the
+// Create a placeholder where the last 3 parameters of the
 // actual range will be replaced when signing is done.
 const byteRange = PDFArray.withContext(pdfDoc.context);
 byteRange.push(PDFNumber.of(0));
@@ -426,7 +427,7 @@ const pdfBytes = await pdfDoc.save()
 ### Consecutive Incremental Updates
 
 You can load a PDF for incremental update, and then generate multiple increments, over the original document, with saveAndContinue() method.  
-This method simplifies replaces the sequence:
+This method simplifies the sequence:
 <!-- prettier-ignore -->
 ```js
 import { PDFDocument, StandardFonts } from 'pdf-lib';
