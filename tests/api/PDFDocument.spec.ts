@@ -706,14 +706,41 @@ describe(`PDFDocument`, () => {
 
     it('properly handles XRef Streams on full save', async () => {
       const pdfDoc = await PDFDocument.load(v15PdfBytes);
-      const incrementBytes = await pdfDoc.save();
-      const str = Buffer.from(incrementBytes).toString();
+      const stmB = await pdfDoc.save();
+      const str = Buffer.from(stmB).toString();
       const match = str.match(/XRef/g);
       expect(match?.length).toBe(1);
-      const noStmIB = await pdfDoc.save({ useObjectStreams: false });
-      const noStrmStr = Buffer.from(noStmIB).toString();
+      const noStmB = await pdfDoc.save({ useObjectStreams: false });
+      const noStrmStr = Buffer.from(noStmB).toString();
       const matchNoStm = noStrmStr.match(/XRef/g);
       expect(matchNoStm).toBeNull();
+    });
+
+    it('calculates correct pdf size', async () => {
+      const pdfDoc = await PDFDocument.load(v15PdfBytes);
+      const stmB = await pdfDoc.save();
+      const str = Buffer.from(stmB).toString();
+      let match = str.match(/Size(.*)/g);
+      expect(match?.length).toBe(1);
+      if (!match) return;
+      expect(match[0]).toBe('Size 16');
+      match = str.match(/Index(.*)/g);
+      if (!match) return;
+      expect(match[0]).toBe('Index [ 0 13 14 2 ]');
+      let tail = str.substring(str.length - 64);
+      tail = tail.substring(tail.indexOf('startxref') + 9).trim();
+      expect(tail.startsWith('3280')).toBeTruthy();
+      const noStmB = await pdfDoc.save({ useObjectStreams: false });
+      const noStrmStr = Buffer.from(noStmB).toString();
+      let matchNoStm = noStrmStr.match(/Size(.*)/g);
+      expect(matchNoStm?.length).toBe(1);
+      if (!matchNoStm) return;
+      expect(matchNoStm[0]).toBe('Size 13');
+      matchNoStm = noStrmStr.match(/Index(.*)/g);
+      expect(matchNoStm).toBeNull();
+      tail = noStrmStr.substring(str.length - 64);
+      tail = tail.substring(tail.indexOf('startxref') + 9).trim();
+      expect(tail.startsWith('3631')).toBeTruthy();
     });
   });
 
