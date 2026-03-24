@@ -1,7 +1,13 @@
 import type { PDFObject, PDFRef } from '../../core';
+import { PDFClasses } from '../objects';
 import type { DocumentSnapshot } from './DocumentSnapshot';
 
 export class DefaultDocumentSnapshot implements DocumentSnapshot {
+  static className = () => PDFClasses.DefaultDocumentSnapshot;
+  myClass(): PDFClasses {
+    return PDFClasses.DefaultDocumentSnapshot;
+  }
+
   pdfSize = 0;
   prevStartXRef = 0;
   deletedCount = 0;

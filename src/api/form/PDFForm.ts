@@ -42,6 +42,7 @@ import {
   PDFWidgetAnnotation,
 } from '../../core';
 import { assertIs, Cache, assertOrUndefined } from '../../utils';
+import { isPDFInstance, PDFClasses } from '../objects';
 
 export interface FlattenOptions {
   updateFieldAppearances: boolean;
@@ -202,7 +203,7 @@ export default class PDFForm {
   getButton(name: string): PDFButton {
     assertIs(name, 'name', ['string']);
     const field = this.getField(name);
-    if (field instanceof PDFButton) return field;
+    if (isPDFInstance(field, PDFClasses.PDFButton)) return field as PDFButton;
     throw new UnexpectedFieldTypeError(name, PDFButton, field);
   }
 
@@ -222,7 +223,8 @@ export default class PDFForm {
   getCheckBox(name: string): PDFCheckBox {
     assertIs(name, 'name', ['string']);
     const field = this.getField(name);
-    if (field instanceof PDFCheckBox) return field;
+    if (isPDFInstance(field, PDFClasses.PDFCheckBox))
+      return field as PDFCheckBox;
     throw new UnexpectedFieldTypeError(name, PDFCheckBox, field);
   }
 
@@ -243,7 +245,8 @@ export default class PDFForm {
   getDropdown(name: string): PDFDropdown {
     assertIs(name, 'name', ['string']);
     const field = this.getField(name);
-    if (field instanceof PDFDropdown) return field;
+    if (isPDFInstance(field, PDFClasses.PDFDropdown))
+      return field as PDFDropdown;
     throw new UnexpectedFieldTypeError(name, PDFDropdown, field);
   }
 
@@ -264,7 +267,8 @@ export default class PDFForm {
   getOptionList(name: string): PDFOptionList {
     assertIs(name, 'name', ['string']);
     const field = this.getField(name);
-    if (field instanceof PDFOptionList) return field;
+    if (isPDFInstance(field, PDFClasses.PDFOptionList))
+      return field as PDFOptionList;
     throw new UnexpectedFieldTypeError(name, PDFOptionList, field);
   }
 
@@ -285,7 +289,8 @@ export default class PDFForm {
   getRadioGroup(name: string): PDFRadioGroup {
     assertIs(name, 'name', ['string']);
     const field = this.getField(name);
-    if (field instanceof PDFRadioGroup) return field;
+    if (isPDFInstance(field, PDFClasses.PDFRadioGroup))
+      return field as PDFRadioGroup;
     throw new UnexpectedFieldTypeError(name, PDFRadioGroup, field);
   }
 
@@ -304,7 +309,8 @@ export default class PDFForm {
   getSignature(name: string): PDFSignature {
     assertIs(name, 'name', ['string']);
     const field = this.getField(name);
-    if (field instanceof PDFSignature) return field;
+    if (isPDFInstance(field, PDFClasses.PDFSignature))
+      return field as PDFSignature;
     throw new UnexpectedFieldTypeError(name, PDFSignature, field);
   }
 
@@ -324,7 +330,8 @@ export default class PDFForm {
   getTextField(name: string): PDFTextField {
     assertIs(name, 'name', ['string']);
     const field = this.getField(name);
-    if (field instanceof PDFTextField) return field;
+    if (isPDFInstance(field, PDFClasses.PDFTextField))
+      return field as PDFTextField;
     throw new UnexpectedFieldTypeError(name, PDFTextField, field);
   }
 
@@ -606,8 +613,8 @@ export default class PDFForm {
     const kidsCount = fieldKids.size();
     for (let childIndex = 0; childIndex < kidsCount; childIndex++) {
       const child = fieldKids.get(childIndex);
-      if (child instanceof PDFRef) {
-        this.doc.context.delete(child);
+      if (isPDFInstance(child, PDFClasses.PDFRef)) {
+        this.doc.context.delete(child as PDFRef);
       }
     }
     this.doc.context.delete(field.ref);
@@ -731,26 +738,33 @@ export default class PDFForm {
   ): PDFRef {
     let refOrDict = widget.getNormalAppearance();
 
-    if (field instanceof PDFCheckBox || field instanceof PDFRadioGroup) {
-      if (refOrDict instanceof PDFRef) {
+    if (
+      isPDFInstance(field, PDFClasses.PDFCheckBox) ||
+      isPDFInstance(field, PDFClasses.PDFRadioGroup)
+    ) {
+      if (isPDFInstance(refOrDict, PDFClasses.PDFRef)) {
         refOrDict = this.doc.context.lookup(refOrDict, PDFDict);
       }
-      if (refOrDict instanceof PDFDict) {
-        const value = field.acroField.getValue();
-        const ref = refOrDict.get(value) ?? refOrDict.get(PDFName.of('Off'));
+      if (isPDFInstance(refOrDict, PDFClasses.PDFDict)) {
+        const value = (
+          field as PDFCheckBox | PDFRadioGroup
+        ).acroField.getValue();
+        const ref =
+          (refOrDict as PDFDict).get(value) ??
+          (refOrDict as PDFDict).get(PDFName.of('Off'));
 
-        if (ref instanceof PDFRef) {
-          refOrDict = ref;
+        if (isPDFInstance(ref, PDFClasses.PDFRef)) {
+          refOrDict = ref as PDFRef;
         }
       }
     }
 
-    if (!(refOrDict instanceof PDFRef)) {
+    if (!isPDFInstance(refOrDict, PDFClasses.PDFRef)) {
       const name = field.getName();
       throw new Error(`Failed to extract appearance ref for: ${name}`);
     }
 
-    return refOrDict;
+    return refOrDict as PDFRef;
   }
 
   private findOrCreateNonTerminals(partialNames: string[]) {
@@ -781,15 +795,15 @@ export default class PDFForm {
     partialName: string,
     parent: PDFAcroForm | PDFAcroNonTerminal,
   ): [PDFAcroNonTerminal, PDFRef] | undefined {
-    const fields =
-      parent instanceof PDFAcroForm
-        ? this.acroForm.getFields()
-        : createPDFAcroFields(parent.Kids());
+    const fields = isPDFInstance(parent, PDFClasses.PDFAcroForm)
+      ? this.acroForm.getFields()
+      : createPDFAcroFields((parent as PDFAcroNonTerminal).Kids());
 
     for (let idx = 0, len = fields.length; idx < len; idx++) {
       const [field, ref] = fields[idx];
       if (field.getPartialName() === partialName) {
-        if (field instanceof PDFAcroNonTerminal) return [field, ref];
+        if (isPDFInstance(field, PDFClasses.PDFAcroNonTerminal))
+          return [field as PDFAcroNonTerminal, ref];
         throw new FieldAlreadyExistsError(partialName);
       }
     }
@@ -806,16 +820,21 @@ const convertToPDFField = (
   ref: PDFRef,
   doc: PDFDocument,
 ): PDFField | undefined => {
-  if (field instanceof PDFAcroPushButton) return PDFButton.of(field, ref, doc);
-  if (field instanceof PDFAcroCheckBox) return PDFCheckBox.of(field, ref, doc);
-  if (field instanceof PDFAcroComboBox) return PDFDropdown.of(field, ref, doc);
-  if (field instanceof PDFAcroListBox) return PDFOptionList.of(field, ref, doc);
-  if (field instanceof PDFAcroText) return PDFTextField.of(field, ref, doc);
-  if (field instanceof PDFAcroRadioButton) {
-    return PDFRadioGroup.of(field, ref, doc);
+  if (isPDFInstance(field, PDFClasses.PDFAcroPushButton))
+    return PDFButton.of(field as PDFAcroPushButton, ref, doc);
+  if (isPDFInstance(field, PDFClasses.PDFAcroCheckBox))
+    return PDFCheckBox.of(field as PDFAcroCheckBox, ref, doc);
+  if (isPDFInstance(field, PDFClasses.PDFAcroComboBox))
+    return PDFDropdown.of(field as PDFAcroComboBox, ref, doc);
+  if (isPDFInstance(field, PDFClasses.PDFAcroListBox))
+    return PDFOptionList.of(field as PDFAcroListBox, ref, doc);
+  if (isPDFInstance(field, PDFClasses.PDFAcroText))
+    return PDFTextField.of(field as PDFAcroText, ref, doc);
+  if (isPDFInstance(field, PDFClasses.PDFAcroRadioButton)) {
+    return PDFRadioGroup.of(field as PDFAcroRadioButton, ref, doc);
   }
-  if (field instanceof PDFAcroSignature) {
-    return PDFSignature.of(field, ref, doc);
+  if (isPDFInstance(field, PDFClasses.PDFAcroSignature)) {
+    return PDFSignature.of(field as PDFAcroSignature, ref, doc);
   }
   return undefined;
 };

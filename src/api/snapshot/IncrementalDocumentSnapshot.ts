@@ -1,4 +1,5 @@
 import type { PDFContext, PDFObject, PDFRef } from '../../core';
+import { PDFClasses } from '../objects';
 import type { DocumentSnapshot } from './DocumentSnapshot';
 
 export class IncrementalDocumentSnapshot implements DocumentSnapshot {
@@ -24,6 +25,11 @@ export class IncrementalDocumentSnapshot implements DocumentSnapshot {
     this.pdfSize = pdfSize;
     this.prevStartXRef = prevStartXRef;
     this.context = context;
+  }
+
+  static className = () => PDFClasses.IncrementalDocumentSnapshot;
+  myClass(): PDFClasses {
+    return PDFClasses.IncrementalDocumentSnapshot;
   }
 
   shouldSave(objectNumber: number): boolean {

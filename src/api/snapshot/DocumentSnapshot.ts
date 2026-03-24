@@ -1,9 +1,12 @@
 import type { PDFObject, PDFRef } from '../../core';
+import { PDFClasses } from '../objects';
 
 export interface DocumentSnapshot {
   pdfSize: number;
   prevStartXRef: number;
   deletedCount: number;
+
+  myClass: () => PDFClasses;
 
   shouldSave: (objectNumber: number) => boolean;
 

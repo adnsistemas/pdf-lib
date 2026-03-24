@@ -15,13 +15,9 @@ import PDFField, {
 import { rgb } from '../colors';
 import { degrees } from '../rotations';
 
-import {
-  PDFRef,
-  PDFStream,
-  PDFAcroPushButton,
-  PDFWidgetAnnotation,
-} from '../../core';
+import { PDFRef, PDFAcroPushButton, PDFWidgetAnnotation } from '../../core';
 import { assertIs, assertOrUndefined, assertPositive } from '../../utils';
+import { isPDFInstance, PDFClasses } from '../objects';
 
 /**
  * Represents a button field of a [[PDFForm]].
@@ -33,6 +29,10 @@ import { assertIs, assertOrUndefined, assertPositive } from '../../utils';
  * have a text label describing the action that they perform when clicked.
  */
 export default class PDFButton extends PDFField {
+  static className = () => PDFClasses.PDFButton;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFButton;
+  }
   /**
    * > **NOTE:** You probably don't want to call this method directly. Instead,
    * > consider using the [[PDFForm.getButton]] method, which will create an
@@ -199,8 +199,10 @@ export default class PDFButton extends PDFField {
     const widgets = this.acroField.getWidgets();
     for (let idx = 0, len = widgets.length; idx < len; idx++) {
       const widget = widgets[idx];
-      const hasAppearances =
-        widget.getAppearances()?.normal instanceof PDFStream;
+      const hasAppearances = isPDFInstance(
+        widget.getAppearances()?.normal,
+        PDFClasses.PDFStream,
+      );
       if (!hasAppearances) return true;
     }
 

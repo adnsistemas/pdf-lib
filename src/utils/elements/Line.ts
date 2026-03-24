@@ -1,3 +1,4 @@
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 import { Coordinates } from '../../types';
 import { intersectionLine } from '../intersections';
 import { isColinear, isEqual, orthogonal, vector } from '../maths';
@@ -6,6 +7,10 @@ import GraphElement from './GraphElement';
 import Point from './Point';
 
 export default class Line extends GraphElement {
+  static className = () => PDFClasses.Line;
+  myClass(): PDFClasses {
+    return PDFClasses.Line;
+  }
   origin(): Point {
     return this.A;
   }
@@ -46,12 +51,15 @@ export default class Line extends GraphElement {
   isEqual(element: GraphElement): boolean {
     const vect = this.dirVect();
     return (
-      element instanceof Line &&
-      isColinear(vect, element.dirVect()) &&
+      isPDFInstance(element, PDFClasses.Line) &&
+      isColinear(vect, (element as Line).dirVect()) &&
       (isEqual(vect.x, 0)
         ? // We need to take care of the case of the vertical line
-          isEqual(this.origin().toCoords().x, element.origin().toCoords().x)
-        : isEqual(this.b(), element.b()))
+          isEqual(
+            this.origin().toCoords().x,
+            (element as Line).origin().toCoords().x,
+          )
+        : isEqual(this.b(), (element as Line).b()))
     );
   }
 

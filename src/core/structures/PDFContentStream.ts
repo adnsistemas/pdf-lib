@@ -3,8 +3,13 @@ import PDFOperator from '../operators/PDFOperator';
 import PDFContext from '../PDFContext';
 import PDFFlateStream from './PDFFlateStream';
 import CharCodes from '../syntax/CharCodes';
+import { PDFClasses } from '../../api/objects';
 
 class PDFContentStream extends PDFFlateStream {
+  static className = () => PDFClasses.PDFContentStream;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFContentStream;
+  }
   static of = (dict: PDFDict, operators: PDFOperator[], encode = true) =>
     new PDFContentStream(dict, operators, encode);
 

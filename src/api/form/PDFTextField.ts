@@ -24,7 +24,6 @@ import { TextAlignment } from '../text/alignment';
 import {
   PDFHexString,
   PDFRef,
-  PDFStream,
   PDFAcroText,
   AcroTextFlags,
   PDFWidgetAnnotation,
@@ -36,6 +35,7 @@ import {
   assertPositive,
   assertRangeOrUndefined,
 } from '../../utils';
+import { isPDFInstance, PDFClasses } from '../objects';
 
 /**
  * Represents a text field of a [[PDFForm]].
@@ -47,6 +47,10 @@ import {
  * to be entered (see [[PDFTextField.isMultiline]]).
  */
 export default class PDFTextField extends PDFField {
+  static className = () => PDFClasses.PDFTextField;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFTextField;
+  }
   /**
    * > **NOTE:** You probably don't want to call this method directly. Instead,
    * > consider using the [[PDFForm.getTextField]] method, which will create an
@@ -760,8 +764,10 @@ export default class PDFTextField extends PDFField {
     const widgets = this.acroField.getWidgets();
     for (let idx = 0, len = widgets.length; idx < len; idx++) {
       const widget = widgets[idx];
-      const hasAppearances =
-        widget.getAppearances()?.normal instanceof PDFStream;
+      const hasAppearances = isPDFInstance(
+        widget.getAppearances()?.normal,
+        PDFClasses.PDFStream,
+      );
       if (!hasAppearances) return true;
     }
 

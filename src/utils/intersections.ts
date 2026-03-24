@@ -18,29 +18,47 @@ import {
   vector,
   rotate,
 } from './maths';
+import { isPDFInstance, PDFClasses } from '../api/objects';
 
 export const intersections = (
   A: GraphicElement,
   B: GraphicElement,
 ): Coordinates[] => {
-  if (A instanceof Point || B instanceof Point) return [];
+  if (isPDFInstance(A, PDFClasses.Point) || isPDFInstance(B, PDFClasses.Point))
+    return [];
   else if (A instanceof Text || B instanceof Text) return [];
   else if (A instanceof Image || B instanceof Image) return [];
   // TODO: calculate the coords of the intersection: https://www.emathzone.com/tutorials/geometry/intersection-of-line-and-ellipse.html
-  else if (A instanceof Line) return intersectionsLine(A, B);
-  else if (A instanceof Segment) {
-    return intersectionsLine(A.getLine(), B).filter((P) =>
-      A.includes(new Point(P)),
+  else if (isPDFInstance(A, PDFClasses.Line))
+    return intersectionsLine(
+      A as Line,
+      B as Arc | Circle | Ellipse | Line | Plot | Rectangle | Segment,
     );
-  } else if (A instanceof Circle) return intersectionsCircle(A, B);
-  else if (A instanceof Arc) {
-    return intersectionsCircle(A.getCircle(), B).filter((P) =>
-      A.includes(new Point(P)),
+  else if (isPDFInstance(A, PDFClasses.Segment)) {
+    return intersectionsLine(
+      (A as Segment).getLine(),
+      B as Arc | Circle | Ellipse | Line | Plot | Rectangle | Segment,
+    ).filter((P) => (A as Segment).includes(new Point(P)));
+  } else if (isPDFInstance(A, PDFClasses.Circle))
+    return intersectionsCircle(
+      A as Circle,
+      B as Arc | Circle | Ellipse | Line | Plot | Rectangle | Segment,
     );
-  } else if (A instanceof Plot) return intersectionsPlot(A, B);
-  else if (A instanceof Rectangle) return intersectionsRectangle(A, B);
-  else if (A instanceof Ellipse) return intersectionsEllipse(A, B);
-  return A;
+  else if (isPDFInstance(A, PDFClasses.Arc)) {
+    return intersectionsCircle(
+      (A as Arc).getCircle(),
+      B as Arc | Circle | Ellipse | Line | Plot | Rectangle | Segment,
+    ).filter((P) => (A as Arc).includes(new Point(P)));
+  } else if (isPDFInstance(A, PDFClasses.Plot))
+    return intersectionsPlot(A as Plot, B);
+  else if (isPDFInstance(A, PDFClasses.Rectangle))
+    return intersectionsRectangle(A as Rectangle, B);
+  else if (isPDFInstance(A, PDFClasses.Ellipse))
+    return intersectionsEllipse(
+      A as Ellipse,
+      B as Arc | Circle | Ellipse | Line | Plot | Rectangle | Segment,
+    );
+  return A as never;
 };
 
 export const intersection = (
@@ -52,45 +70,52 @@ const intersectionsLine = (
   A: Line,
   B: Exclude<GraphicElement, Text | Point>,
 ): Coordinates[] => {
-  if (B instanceof Line) return intersectionLine(A, B);
-  else if (B instanceof Segment) {
-    return intersectionLine(A, B.getLine()).filter((P) =>
-      B.includes(new Point(P)),
+  if (isPDFInstance(B, PDFClasses.Line)) return intersectionLine(A, B as Line);
+  else if (isPDFInstance(B, PDFClasses.Segment)) {
+    return intersectionLine(A, (B as Segment).getLine()).filter((P) =>
+      (B as Segment).includes(new Point(P)),
     );
-  } else if (B instanceof Circle) return intersectionCircleLine(B, A);
-  else if (B instanceof Arc) {
-    return intersectionsCircle(B.getCircle(), A).filter((P) =>
-      B.includes(new Point(P)),
+  } else if (isPDFInstance(B, PDFClasses.Circle))
+    return intersectionCircleLine(B as Circle, A);
+  else if (isPDFInstance(B, PDFClasses.Arc)) {
+    return intersectionsCircle((B as Arc).getCircle(), A).filter((P) =>
+      (B as Arc).includes(new Point(P)),
     );
-  } else if (B instanceof Plot) return intersectionsPlot(B, A);
-  else if (B instanceof Rectangle) return intersectionsRectangle(B, A);
-  else if (B instanceof Ellipse) return intersectionsEllipse(B, A);
-  return B;
+  } else if (isPDFInstance(B, PDFClasses.Plot))
+    return intersectionsPlot(B as Plot, A);
+  else if (isPDFInstance(B, PDFClasses.Rectangle))
+    return intersectionsRectangle(B as Rectangle, A);
+  else if (isPDFInstance(B, PDFClasses.Ellipse))
+    return intersectionsEllipse(B as Ellipse, A);
+  return B as never;
 };
 
 const intersectionsEllipse = (
   A: Ellipse,
   B: Exclude<GraphicElement, Text | Point>,
 ): Coordinates[] => {
-  if (B instanceof Line) return intersectionsLineAndEllipse(A, B);
-  else if (B instanceof Segment) {
-    return intersectionsEllipse(A, B.getLine()).filter((P) =>
-      B.includes(new Point(P)),
+  if (isPDFInstance(B, PDFClasses.Line))
+    return intersectionsLineAndEllipse(A, B as Line);
+  else if (isPDFInstance(B, PDFClasses.Segment)) {
+    return intersectionsEllipse(A, (B as Segment).getLine()).filter((P) =>
+      (B as Segment).includes(new Point(P)),
     );
   }
   // TODO:
-  // else if (B instanceof Circle) return intersectionEllipseCircle(B, A)
-  else if (B instanceof Circle) return [];
+  // else if (isPDFInstnace(B, PDFClasses.Circle)) return intersectionEllipseCircle(B as Circle, A);
+  else if (isPDFInstance(B, PDFClasses.Circle)) return [];
   // TODO:
-  // else if (B instanceof Ellipse) return intersectionEllipseEllipse(B, A)
-  else if (B instanceof Ellipse) return [];
-  else if (B instanceof Arc) {
-    return intersectionsEllipse(A, B.getCircle()).filter((P) =>
-      B.includes(new Point(P)),
+  // else if (isPDFInstance(B, PDFClasses.Ellipse)) return intersectionEllipseEllipse(B as Ellipse, A);
+  else if (isPDFInstance(B, PDFClasses.Ellipse)) return [];
+  else if (isPDFInstance(B, PDFClasses.Arc)) {
+    return intersectionsEllipse(A, (B as Arc).getCircle()).filter((P) =>
+      (B as Arc).includes(new Point(P)),
     );
-  } else if (B instanceof Plot) return intersectionsPlot(B, A);
-  else if (B instanceof Rectangle) return intersectionsRectangle(B, A);
-  return B;
+  } else if (isPDFInstance(B, PDFClasses.Plot))
+    return intersectionsPlot(B as Plot, A);
+  else if (isPDFInstance(B, PDFClasses.Rectangle))
+    return intersectionsRectangle(B as Rectangle, A);
+  return B as never;
 };
 
 const intersectionsLineAndEllipse = (A: Ellipse, B: Line): Coordinates[] => {
@@ -253,20 +278,25 @@ const intersectionsCircle = (
   A: Circle,
   B: Exclude<GraphicElement, Text | Point>,
 ): Coordinates[] => {
-  if (B instanceof Circle) return intersectionCircle(A, B);
-  else if (B instanceof Line) return intersectionCircleLine(A, B);
-  else if (B instanceof Segment) {
-    return intersectionCircleLine(A, B.getLine()).filter((P) =>
-      B.includes(new Point(P)),
+  if (isPDFInstance(B, PDFClasses.Circle))
+    return intersectionCircle(A, B as Circle);
+  else if (isPDFInstance(B, PDFClasses.Line))
+    return intersectionCircleLine(A, B as Line);
+  else if (isPDFInstance(B, PDFClasses.Segment)) {
+    return intersectionCircleLine(A, (B as Segment).getLine()).filter((P) =>
+      (B as Segment).includes(new Point(P)),
     );
-  } else if (B instanceof Arc) {
-    return intersectionCircle(A, B.getCircle()).filter((P) =>
-      B.includes(new Point(P)),
+  } else if (isPDFInstance(B, PDFClasses.Arc)) {
+    return intersectionCircle(A, (B as Arc).getCircle()).filter((P) =>
+      (B as Arc).includes(new Point(P)),
     );
-  } else if (B instanceof Plot) return intersectionsPlot(B, A);
-  else if (B instanceof Rectangle) return intersectionsRectangle(B, A);
-  else if (B instanceof Ellipse) return intersectionsEllipse(B, A);
-  return B;
+  } else if (isPDFInstance(B, PDFClasses.Plot))
+    return intersectionsPlot(B as Plot, A);
+  else if (isPDFInstance(B, PDFClasses.Rectangle))
+    return intersectionsRectangle(B as Rectangle, A);
+  else if (isPDFInstance(B, PDFClasses.Ellipse))
+    return intersectionsEllipse(B as Ellipse, A);
+  return B as never;
 };
 
 export const getIntersections = (elements: GraphicElement[]) => {

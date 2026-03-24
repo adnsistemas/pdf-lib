@@ -29,6 +29,7 @@ import { IsDigit, IsNumeric } from '../syntax/Numeric';
 import { IsWhitespace } from '../syntax/Whitespace';
 import { arrayAsString, charFromCode } from '../../utils';
 import { CipherTransformFactory } from '../crypto';
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 
 // TODO: Throw error if eof is reached before finishing object parse...
 class PDFObjectParser extends BaseParser {
@@ -256,8 +257,8 @@ class PDFObjectParser extends BaseParser {
     let end: number;
 
     const Length = dict.get(PDFName.of('Length'));
-    if (Length instanceof PDFNumber) {
-      end = start + Length.asNumber();
+    if (isPDFInstance(Length, PDFClasses.PDFNumber)) {
+      end = start + (Length as PDFNumber).asNumber();
       this.bytes.moveTo(end);
       this.skipWhitespaceAndComments();
       if (!this.matchKeyword(Keywords.endstream)) {

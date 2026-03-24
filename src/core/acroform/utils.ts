@@ -18,6 +18,7 @@ import PDFAcroCheckBox from './PDFAcroCheckBox';
 import PDFAcroComboBox from './PDFAcroComboBox';
 import PDFAcroListBox from './PDFAcroListBox';
 import { AcroButtonFlags, AcroChoiceFlags } from './flags';
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 
 export const createPDFAcroFields = (
   kidDicts?: PDFArray,
@@ -28,9 +29,15 @@ export const createPDFAcroFields = (
   for (let idx = 0, len = kidDicts.size(); idx < len; idx++) {
     const ref = kidDicts.get(idx);
     const dict = kidDicts.lookup(idx);
-    // if (dict instanceof PDFDict) kids.push(PDFAcroField.fromDict(dict));
-    if (ref instanceof PDFRef && dict instanceof PDFDict) {
-      kids.push([createPDFAcroField(dict, ref), ref]);
+    // if (isPDFInstance(dict, PDFClasses.PDFDict)) kids.push(PDFAcroField.fromDict(dict));
+    if (
+      isPDFInstance(ref, PDFClasses.PDFRef) &&
+      isPDFInstance(dict, PDFClasses.PDFDict)
+    ) {
+      kids.push([
+        createPDFAcroField(dict as PDFDict, ref as PDFRef),
+        ref as PDFRef,
+      ]);
     }
   }
 
@@ -65,10 +72,12 @@ export const createPDFAcroField = (
 const isNonTerminalAcroField = (dict: PDFDict): boolean => {
   const kids = dict.lookup(PDFName.of('Kids'));
 
-  if (kids instanceof PDFArray) {
-    for (let idx = 0, len = kids.size(); idx < len; idx++) {
-      const kid = kids.lookup(idx);
-      const kidIsField = kid instanceof PDFDict && kid.has(PDFName.of('T'));
+  if (isPDFInstance(kids, PDFClasses.PDFArray)) {
+    for (let idx = 0, len = (kids as PDFArray).size(); idx < len; idx++) {
+      const kid = (kids as PDFArray).lookup(idx);
+      const kidIsField =
+        isPDFInstance(kid, PDFClasses.PDFDict) &&
+        (kid as PDFDict).has(PDFName.of('T'));
       if (kidIsField) return true;
     }
   }

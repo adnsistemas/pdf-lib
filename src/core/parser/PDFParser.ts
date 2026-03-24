@@ -25,6 +25,7 @@ import { IsDigit } from '../syntax/Numeric';
 import { waitForTick } from '../../utils';
 import { CipherTransformFactory } from '../crypto';
 import PDFNumber from '../objects/PDFNumber';
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 
 class PDFParser extends PDFObjectParser {
   static forBytesWithOptions = (
@@ -110,8 +111,8 @@ class PDFParser extends PDFObjectParser {
 
   private maybeRecoverRoot(): void {
     const isValidCatalog = (obj?: PDFObject) =>
-      obj instanceof PDFDict &&
-      obj.lookup(PDFName.of('Type')) === PDFName.of('Catalog');
+      isPDFInstance(obj, PDFClasses.PDFDict) &&
+      (obj as PDFDict).lookup(PDFName.of('Type')) === PDFName.of('Catalog');
 
     const catalog = this.context.lookup(this.context.trailerInfo.Root);
 
@@ -188,18 +189,22 @@ class PDFParser extends PDFObjectParser {
     this.matchKeyword(Keywords.endobj);
 
     if (
-      object instanceof PDFRawStream &&
-      object.dict.lookup(PDFName.of('Type')) === PDFName.of('ObjStm')
+      isPDFInstance(object, PDFClasses.PDFRawStream) &&
+      (object as PDFRawStream).dict.lookup(PDFName.of('Type')) ===
+        PDFName.of('ObjStm')
     ) {
       await PDFObjectStreamParser.forStream(
-        object,
+        object as PDFRawStream,
         this.shouldWaitForTick,
       ).parseIntoContext();
     } else if (
-      object instanceof PDFRawStream &&
-      object.dict.lookup(PDFName.of('Type')) === PDFName.of('XRef')
+      isPDFInstance(object, PDFClasses.PDFRawStream) &&
+      (object as PDFRawStream).dict.lookup(PDFName.of('Type')) ===
+        PDFName.of('XRef')
     ) {
-      const entries = PDFXRefStreamParser.forStream(object).parseIntoContext();
+      const entries = PDFXRefStreamParser.forStream(
+        object as PDFRawStream,
+      ).parseIntoContext();
       if (entries.length) {
         const xref = PDFCrossRefSection.createEmpty();
         for (const entry of entries) {

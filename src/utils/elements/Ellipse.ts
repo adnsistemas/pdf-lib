@@ -1,3 +1,4 @@
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 import { Size } from '../../types';
 import {
   angle,
@@ -15,6 +16,10 @@ import Point from './Point';
 import Segment from './Segment';
 
 export default class Ellipse extends GraphElement {
+  static className = () => PDFClasses.Ellipse;
+  myClass(): PDFClasses {
+    return PDFClasses.Ellipse;
+  }
   A: Point;
   B: Point;
   C: Point;
@@ -62,13 +67,13 @@ export default class Ellipse extends GraphElement {
   }
 
   isEqual(element: GraphElement): boolean {
-    if (!(element instanceof Ellipse)) return false;
+    if (!isPDFInstance(element, PDFClasses.Ellipse)) return false;
     const a = this.a();
     const b = this.b();
     const rotation = this.rotation();
-    const eltA = element.a();
-    const eltB = element.b();
-    const eltRotation = element.rotation();
+    const eltA = (element as Ellipse).a();
+    const eltB = (element as Ellipse).b();
+    const eltRotation = (element as Ellipse).rotation();
     // If the main axis is the same on both ellipse
     if (eltA < eltB === a < b) {
       // The rotation is equivalent module PI as the element is symetrical

@@ -9,6 +9,7 @@ import PDFHexString from '../objects/PDFHexString';
 import PDFRef from '../objects/PDFRef';
 import PDFContext from '../PDFContext';
 import { toCodePoint, toHexString } from '../../utils';
+import { PDFClasses } from '../../api/objects';
 
 export interface Glyph {
   code: number;
@@ -21,6 +22,10 @@ export interface Glyph {
  *   https://github.com/foliojs/pdfkit/blob/f91bdd61c164a72ea06be1a43dc0a412afc3925f/lib/font/afm.coffee
  */
 class StandardFontEmbedder {
+  static className = () => PDFClasses.StandardFontEmbedder;
+  myClass(): PDFClasses {
+    return PDFClasses.StandardFontEmbedder;
+  }
   static for = (fontName: FontNames, customName?: string) =>
     new StandardFontEmbedder(fontName, customName);
 

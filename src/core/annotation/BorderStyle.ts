@@ -1,3 +1,4 @@
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 import PDFDict from '../objects/PDFDict';
 import PDFName from '../objects/PDFName';
 import PDFNumber from '../objects/PDFNumber';
@@ -14,7 +15,7 @@ class BorderStyle {
 
   W(): PDFNumber | undefined {
     const W = this.dict.lookup(PDFName.of('W'));
-    if (W instanceof PDFNumber) return W;
+    if (isPDFInstance(W, PDFClasses.PDFNumber)) return W as PDFNumber;
     return undefined;
   }
 

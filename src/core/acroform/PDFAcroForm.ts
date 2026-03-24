@@ -4,10 +4,14 @@ import PDFArray from '../objects/PDFArray';
 import PDFName from '../objects/PDFName';
 import PDFRef from '../objects/PDFRef';
 import PDFAcroField from './PDFAcroField';
-import PDFAcroNonTerminal from './PDFAcroNonTerminal';
 import { createPDFAcroField, createPDFAcroFields } from './utils';
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 
 class PDFAcroForm {
+  static className = () => PDFClasses.PDFAcroForm;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFAcroForm;
+  }
   readonly dict: PDFDict;
 
   static fromDict = (dict: PDFDict) => new PDFAcroForm(dict);
@@ -23,7 +27,7 @@ class PDFAcroForm {
 
   Fields(): PDFArray | undefined {
     const fields = this.dict.lookup(PDFName.of('Fields'));
-    if (fields instanceof PDFArray) return fields;
+    if (isPDFInstance(fields, PDFClasses.PDFArray)) return fields as PDFArray;
     return undefined;
   }
 
@@ -49,7 +53,7 @@ class PDFAcroForm {
         const field = fields[idx];
         allFields.push(field);
         const [fieldModel] = field;
-        if (fieldModel instanceof PDFAcroNonTerminal) {
+        if (isPDFInstance(fieldModel, PDFClasses.PDFAcroNonTerminal)) {
           pushFields(createPDFAcroFields(fieldModel.Kids()));
         }
       }

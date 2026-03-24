@@ -5,8 +5,13 @@ import PDFNumber from './PDFNumber';
 import PDFObject from './PDFObject';
 import PDFContext from '../PDFContext';
 import CharCodes from '../syntax/CharCodes';
+import { PDFClasses } from '../../api/objects';
 
 class PDFStream extends PDFObject {
+  static className = () => PDFClasses.PDFStream;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFStream;
+  }
   readonly dict: PDFDict;
 
   constructor(dict: PDFDict) {

@@ -7,6 +7,7 @@ import PDFRawStream from '../objects/PDFRawStream';
 import PDFRef from '../objects/PDFRef';
 import ByteStream from './ByteStream';
 import PDFContext from '../PDFContext';
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 
 export interface Entry {
   ref: PDFRef;
@@ -41,11 +42,15 @@ class PDFXRefStreamParser {
     const Size = this.dict.lookup(PDFName.of('Size'), PDFNumber);
 
     const Index = this.dict.lookup(PDFName.of('Index'));
-    if (Index instanceof PDFArray) {
+    if (isPDFInstance(Index, PDFClasses.PDFArray)) {
       this.subsections = [];
-      for (let idx = 0, len = Index.size(); idx < len; idx += 2) {
-        const firstObjectNumber = Index.lookup(idx + 0, PDFNumber).asNumber();
-        const length = Index.lookup(idx + 1, PDFNumber).asNumber();
+      for (let idx = 0, len = (Index as PDFArray).size(); idx < len; idx += 2) {
+        const firstObjectNumber = (Index as PDFArray)
+          .lookup(idx + 0, PDFNumber)
+          .asNumber();
+        const length = (Index as PDFArray)
+          .lookup(idx + 1, PDFNumber)
+          .asNumber();
         this.subsections.push({ firstObjectNumber, length });
       }
     } else {

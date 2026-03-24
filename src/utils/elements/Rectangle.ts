@@ -1,8 +1,13 @@
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 import GraphElement from './GraphElement';
 import Point from './Point';
 import Segment from './Segment';
 
 export default class Rectangle extends GraphElement {
+  static className = () => PDFClasses.Rectangle;
+  myClass(): PDFClasses {
+    return PDFClasses.Rectangle;
+  }
   static type = 'Rectangle';
   start: Point;
   end: Point;
@@ -48,9 +53,9 @@ export default class Rectangle extends GraphElement {
 
   isEqual(element: GraphElement): boolean {
     return (
-      element instanceof Rectangle &&
-      this.getStart().isEqual(element.getStart()) &&
-      this.getEnd().isEqual(element.getEnd())
+      isPDFInstance(element, PDFClasses.Rectangle) &&
+      this.getStart().isEqual((element as Rectangle).getStart()) &&
+      this.getEnd().isEqual((element as Rectangle).getEnd())
     );
   }
 

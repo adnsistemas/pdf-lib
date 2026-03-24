@@ -1,3 +1,4 @@
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 import {
   distance,
   isColinear,
@@ -13,6 +14,10 @@ import Line from './Line';
 import Point from './Point';
 
 export default class Segment extends GraphElement {
+  static className = () => PDFClasses.Segment;
+  myClass(): PDFClasses {
+    return PDFClasses.Segment;
+  }
   static type = 'Segment';
   A: Point;
   B: Point;
@@ -39,15 +44,14 @@ export default class Segment extends GraphElement {
   }
 
   isEqual(element: GraphElement): boolean {
-    if (!(element instanceof Segment)) return false;
+    if (!isPDFInstance(element, PDFClasses.Segment)) return false;
     const o = this.origin();
     const dest = this.destination();
-    const oE = element.origin();
-    const destE = element.destination();
+    const oE = (element as Segment).origin();
+    const destE = (element as Segment).destination();
     return (
-      element instanceof Segment &&
-      ((o.isEqual(oE) && dest.isEqual(destE)) ||
-        (o.isEqual(destE) && dest.isEqual(oE)))
+      (o.isEqual(oE) && dest.isEqual(destE)) ||
+      (o.isEqual(destE) && dest.isEqual(oE))
     );
   }
 

@@ -3,8 +3,13 @@ import PDFStream from './PDFStream';
 import PDFContext from '../PDFContext';
 import { arrayAsString } from '../../utils';
 import { CipherTransform } from '../crypto';
+import { PDFClasses } from '../../api/objects';
 
 class PDFRawStream extends PDFStream {
+  static className = () => PDFClasses.PDFRawStream;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFRawStream;
+  }
   static of = (
     dict: PDFDict,
     contents: Uint8Array,

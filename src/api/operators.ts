@@ -1,3 +1,35 @@
+/** =============== There is a circular dependency ===============
+ * To avoid inclusion "undefined" elementos, enums are declared before
+ * imports.
+ */
+export enum LineCapStyle {
+  Butt = 0,
+  Round = 1,
+  Projecting = 2,
+}
+
+export enum LineJoinStyle {
+  Miter = 0,
+  Round = 1,
+  Bevel = 2,
+}
+
+export enum FillRule {
+  NonZero = 'f',
+  EvenOdd = 'f*',
+}
+
+export enum TextRenderingMode {
+  Fill = 0,
+  Outline = 1,
+  FillAndOutline = 2,
+  Invisible = 3,
+  FillAndClip = 4,
+  OutlineAndClip = 5,
+  FillAndOutlineAndClip = 6,
+  Clip = 7,
+}
+
 import { asNumber, asPDFName, asPDFNumber } from './objects';
 import { degreesToRadians } from './rotations';
 import {
@@ -86,20 +118,8 @@ export const setDashPattern = (
 
 export const restoreDashPattern = () => setDashPattern([], 0);
 
-export enum LineCapStyle {
-  Butt = 0,
-  Round = 1,
-  Projecting = 2,
-}
-
 export const setLineCap = (style: LineCapStyle) =>
   PDFOperator.of(Ops.SetLineCapStyle, [asPDFNumber(style)]);
-
-export enum LineJoinStyle {
-  Miter = 0,
-  Round = 1,
-  Bevel = 2,
-}
 
 export const setLineJoin = (style: LineJoinStyle) =>
   PDFOperator.of(Ops.SetLineJoinStyle, [asPDFNumber(style)]);
@@ -185,11 +205,6 @@ export const square = (xPos: number, yPos: number, size: number) =>
 
 export const stroke = () => PDFOperator.of(Ops.StrokePath);
 
-export enum FillRule {
-  NonZero = 'f',
-  EvenOdd = 'f*',
-}
-
 export const fill = () => PDFOperator.of(Ops.FillNonZero);
 
 export const fillEvenOdd = () => PDFOperator.of(Ops.FillEvenOdd);
@@ -235,17 +250,6 @@ export const setLineHeight = (lineHeight: number | PDFNumber) =>
 
 export const setTextRise = (rise: number | PDFNumber) =>
   PDFOperator.of(Ops.SetTextRise, [asPDFNumber(rise)]);
-
-export enum TextRenderingMode {
-  Fill = 0,
-  Outline = 1,
-  FillAndOutline = 2,
-  Invisible = 3,
-  FillAndClip = 4,
-  OutlineAndClip = 5,
-  FillAndOutlineAndClip = 6,
-  Clip = 7,
-}
 
 export const setTextRenderingMode = (mode: TextRenderingMode) =>
   PDFOperator.of(Ops.SetTextRenderingMode, [asPDFNumber(mode)]);

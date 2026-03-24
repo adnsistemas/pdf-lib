@@ -3,8 +3,13 @@ import PDFRef from '../objects/PDFRef';
 import PDFName from '../objects/PDFName';
 import PDFContext from '../PDFContext';
 import PDFAcroField from './PDFAcroField';
+import { PDFClasses } from '../../api/objects';
 
 class PDFAcroNonTerminal extends PDFAcroField {
+  static className = () => PDFClasses.PDFAcroNonTerminal;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFAcroNonTerminal;
+  }
   static fromDict = (dict: PDFDict, ref: PDFRef) =>
     new PDFAcroNonTerminal(dict, ref);
 

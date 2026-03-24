@@ -4,8 +4,13 @@ import PDFDict from '../objects/PDFDict';
 import PDFName from '../objects/PDFName';
 import PDFAcroButton from './PDFAcroButton';
 import { InvalidAcroFieldValueError } from '../errors';
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 
 class PDFAcroCheckBox extends PDFAcroButton {
+  static className = () => PDFClasses.PDFAcroCheckBox;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFAcroCheckBox;
+  }
   static fromDict = (dict: PDFDict, ref: PDFRef) =>
     new PDFAcroCheckBox(dict, ref);
 
@@ -36,7 +41,7 @@ class PDFAcroCheckBox extends PDFAcroButton {
 
   getValue(): PDFName {
     const v = this.V();
-    if (v instanceof PDFName) return v;
+    if (isPDFInstance(v, PDFClasses.PDFName)) return v as PDFName;
     return PDFName.of('Off');
   }
 

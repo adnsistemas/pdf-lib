@@ -1,7 +1,13 @@
+import { PDFClasses } from '../../api/objects';
 import { MethodNotImplementedError } from '../errors';
 import PDFContext from '../PDFContext';
 
 class PDFObject {
+  static className = () => PDFClasses.PDFObject;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFObject;
+  }
+
   registerChange() {
     throw new MethodNotImplementedError(
       this.constructor.name,

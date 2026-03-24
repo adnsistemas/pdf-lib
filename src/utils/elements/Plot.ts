@@ -1,3 +1,4 @@
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 import { Coordinates } from '../../types';
 import { plus } from '../maths';
 
@@ -5,6 +6,10 @@ import GraphElement from './GraphElement';
 import Point from './Point';
 import Segment from './Segment';
 export default class Plot extends GraphElement {
+  static className = () => PDFClasses.Plot;
+  myClass(): PDFClasses {
+    return PDFClasses.Plot;
+  }
   points: Coordinates[];
 
   constructor(points: Coordinates[] = []) {
@@ -21,9 +26,11 @@ export default class Plot extends GraphElement {
   }
 
   isEqual(element: GraphElement): boolean {
-    if (!(element instanceof Plot)) return false;
+    if (!isPDFInstance(element, PDFClasses.Plot)) return false;
     const points = this.getPoints().map((coord) => new Point(coord));
-    const points2 = element.getPoints().map((coord) => new Point(coord));
+    const points2 = (element as Plot)
+      .getPoints()
+      .map((coord) => new Point(coord));
     return (
       points.every((point, i) => point.isEqual(points2[i])) ||
       points.reverse().every((point, i) => point.isEqual(points2[i]))

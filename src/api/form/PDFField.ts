@@ -26,6 +26,7 @@ import { assertIs, assertMultiple, assertOrUndefined } from '../../utils';
 import { ImageAlignment } from '../image';
 import PDFImage from '../PDFImage';
 import { drawImage, rotateInPlace } from '../operations';
+import { PDFClasses } from '../objects';
 
 export interface FieldAppearanceOptions {
   x?: number;
@@ -82,6 +83,10 @@ export const assertFieldAppearanceOptions = (
  * to be rendered.
  */
 export default class PDFField {
+  static className = () => PDFClasses.PDFField;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFField;
+  }
   /** The low-level PDFAcroTerminal wrapped by this field. */
   readonly acroField: PDFAcroTerminal;
 

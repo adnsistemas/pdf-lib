@@ -2,23 +2,23 @@ import { defaultDocumentSnapshot } from '../../api/snapshot';
 import type { DocumentSnapshot } from '../../api/snapshot';
 import PDFHeader from '../document/PDFHeader';
 import PDFTrailer from '../document/PDFTrailer';
-import PDFInvalidObject from '../objects/PDFInvalidObject';
 import PDFName from '../objects/PDFName';
 import PDFNumber from '../objects/PDFNumber';
 import PDFObject from '../objects/PDFObject';
 import PDFRef from '../objects/PDFRef';
-import PDFStream from '../objects/PDFStream';
 import PDFContext from '../PDFContext';
 import PDFCrossRefStream from '../structures/PDFCrossRefStream';
 import PDFObjectStream from '../structures/PDFObjectStream';
 import PDFWriter from '../writers/PDFWriter';
 import { last, waitForTick } from '../../utils';
 import PDFDict from '../objects/PDFDict';
-import PDFCatalog from '../structures/PDFCatalog';
-import PDFPageTree from '../structures/PDFPageTree';
-import PDFPageLeaf from '../structures/PDFPageLeaf';
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 
 class PDFStreamWriter extends PDFWriter {
+  static className = () => PDFClasses.PDFStreamWriter;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFStreamWriter;
+  }
   static forContext = (
     context: PDFContext,
     objectsPerTick: number,
@@ -97,13 +97,13 @@ class PDFStreamWriter extends PDFWriter {
 
       const shouldNotCompress =
         ref === this.context.trailerInfo.Encrypt ||
-        object instanceof PDFStream ||
-        object instanceof PDFInvalidObject ||
-        object instanceof PDFCatalog ||
-        object instanceof PDFPageTree ||
-        object instanceof PDFPageLeaf ||
+        isPDFInstance(object, PDFClasses.PDFStream) ||
+        isPDFInstance(object, PDFClasses.PDFInvalidObject) ||
+        isPDFInstance(object, PDFClasses.PDFCatalog) ||
+        isPDFInstance(object, PDFClasses.PDFPageTree) ||
+        isPDFInstance(object, PDFClasses.PDFPageLeaf) ||
         ref.generationNumber !== 0 ||
-        (object instanceof PDFDict &&
+        (isPDFInstance(object, PDFClasses.PDFDict) &&
           (object as PDFDict).lookup(PDFName.of('Type')) === PDFName.of('Sig'));
 
       if (shouldNotCompress) {

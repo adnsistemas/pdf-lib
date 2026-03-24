@@ -81,6 +81,7 @@ import PDFSvg from './PDFSvg';
 import PDFSecurity, { SecurityOptions } from '../core/security/PDFSecurity';
 import { IncrementalDocumentSnapshot } from './snapshot';
 import type { DocumentSnapshot } from './snapshot';
+import { isPDFInstance, PDFClasses } from './objects';
 
 export type BasePDFAttachment = {
   name: string;
@@ -246,6 +247,11 @@ export default class PDFDocument {
     context.trailerInfo.Root = context.register(catalog);
 
     return new PDFDocument(context, false, updateMetadata);
+  }
+  static className = () => PDFClasses.PDFDocument;
+
+  myClass(): PDFClasses {
+    return PDFClasses.PDFDocument;
   }
 
   /** The low-level context of this document. */
@@ -1036,52 +1042,50 @@ export default class PDFDocument {
     const rawAttachments = this.getRawAttachments();
     return rawAttachments.flatMap(({ fileName, fileSpec, specRef }) => {
       const efDict = fileSpec.lookup(PDFName.of('EF'));
-      if (!(efDict instanceof PDFDict)) return [];
+      if (!isPDFInstance(efDict, PDFClasses.PDFDict)) return [];
 
-      const stream = efDict.lookup(PDFName.of('F'));
-      if (!(stream instanceof PDFStream)) return [];
+      const stream = (efDict as PDFDict).lookup(PDFName.of('F'));
+      if (!isPDFInstance(stream, PDFClasses.PDFStream)) return [];
 
       const afr = fileSpec.lookup(PDFName.of('AFRelationship'));
-      const afRelationship =
-        afr instanceof PDFName
-          ? afr.toString().slice(1) // Remove leading slash
-          : afr instanceof PDFString
-            ? afr.decodeText()
-            : undefined;
+      const afRelationship = isPDFInstance(afr, PDFClasses.PDFName)
+        ? (afr as PDFName).toString().slice(1) // Remove leading slash
+        : isPDFInstance(afr, PDFClasses.PDFString)
+          ? (afr as PDFString).decodeText()
+          : undefined;
 
-      const embeddedFileDict = stream.dict;
+      const embeddedFileDict = (stream as PDFStream).dict;
       const subtype = embeddedFileDict.lookup(PDFName.of('Subtype'));
 
-      const mimeType =
-        subtype instanceof PDFName
-          ? subtype.toString().slice(1)
-          : subtype instanceof PDFString
-            ? subtype.decodeText()
-            : undefined;
+      const mimeType = isPDFInstance(subtype, PDFClasses.PDFName)
+        ? (subtype as PDFName).toString().slice(1)
+        : isPDFInstance(subtype, PDFClasses.PDFString)
+          ? (subtype as PDFString).decodeText()
+          : undefined;
 
       const paramsDict = embeddedFileDict.lookup(PDFName.of('Params'), PDFDict);
 
       let creationDate: Date | undefined;
       let modificationDate: Date | undefined;
 
-      if (paramsDict instanceof PDFDict) {
+      if (isPDFInstance(paramsDict, PDFClasses.PDFDict)) {
         const creationDateRaw = paramsDict.lookup(PDFName.of('CreationDate'));
         const modDateRaw = paramsDict.lookup(PDFName.of('ModDate'));
 
-        if (creationDateRaw instanceof PDFString) {
-          creationDate = creationDateRaw.decodeDate();
+        if (isPDFInstance(creationDateRaw, PDFClasses.PDFString)) {
+          creationDate = (creationDateRaw as PDFString).decodeDate();
         }
 
-        if (modDateRaw instanceof PDFString) {
-          modificationDate = modDateRaw.decodeDate();
+        if (isPDFInstance(modDateRaw, PDFClasses.PDFString)) {
+          modificationDate = (modDateRaw as PDFString).decodeDate();
         }
       }
 
       const descRaw = fileSpec.lookup(PDFName.of('Desc'));
       let description: string | undefined;
 
-      if (descRaw instanceof PDFHexString) {
-        description = descRaw.decodeText();
+      if (isPDFInstance(descRaw, PDFClasses.PDFHexString)) {
+        description = (descRaw as PDFHexString).decodeText();
       }
 
       return [
@@ -1095,7 +1099,7 @@ export default class PDFDocument {
           description,
           creationDate,
           modificationDate,
-          embeddedFileDict: efDict,
+          embeddedFileDict: efDict as PDFDict,
           specRef,
         },
       ];
@@ -1416,10 +1420,11 @@ export default class PDFDocument {
     ]);
     assertIs(indices, 'indices', [Array]);
 
-    const srcDoc =
-      pdf instanceof PDFDocument ? pdf : await PDFDocument.load(pdf);
+    const srcDoc = isPDFInstance(pdf, PDFClasses.PDFDocument)
+      ? pdf
+      : await PDFDocument.load(pdf as string | Uint8Array | ArrayBuffer);
 
-    const srcPages = pluckIndices(srcDoc.getPages(), indices);
+    const srcPages = pluckIndices((srcDoc as PDFDocument).getPages(), indices);
 
     return this.embedPages(srcPages);
   }
@@ -1859,8 +1864,8 @@ export default class PDFDocument {
 
   private getInfoDict(): PDFDict {
     const existingInfo = this.context.lookup(this.context.trailerInfo.Info);
-    if (existingInfo instanceof PDFDict) {
-      return existingInfo;
+    if (isPDFInstance(existingInfo, PDFClasses.PDFDict)) {
+      return existingInfo as PDFDict;
     }
 
     const newInfo = this.context.obj({});
@@ -1877,11 +1882,11 @@ export default class PDFDocument {
   private computePages = (): PDFPage[] => {
     const pages: PDFPage[] = [];
     this.catalog.Pages().traverse((node, ref) => {
-      if (node instanceof PDFPageLeaf) {
-        let page = this.pageMap.get(node);
+      if (isPDFInstance(node, PDFClasses.PDFPageLeaf)) {
+        let page = this.pageMap.get(node as PDFPageLeaf);
         if (!page) {
-          page = PDFPage.of(node, ref, this);
-          this.pageMap.set(node, page);
+          page = PDFPage.of(node as PDFPageLeaf, ref, this);
+          this.pageMap.set(node as PDFPageLeaf, page);
         }
         pages.push(page);
       }
@@ -1900,8 +1905,8 @@ function assertIsLiteralOrHexString(
   pdfObject: PDFObject,
 ): asserts pdfObject is PDFHexString | PDFString {
   if (
-    !(pdfObject instanceof PDFHexString) &&
-    !(pdfObject instanceof PDFString)
+    !isPDFInstance(pdfObject, PDFClasses.PDFHexString) &&
+    !isPDFInstance(pdfObject, PDFClasses.PDFString)
   ) {
     throw new UnexpectedObjectTypeError([PDFHexString, PDFString], pdfObject);
   }

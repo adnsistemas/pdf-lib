@@ -6,10 +6,15 @@ import PDFContext from '../PDFContext';
 import PDFFlateStream from './PDFFlateStream';
 import CharCodes from '../syntax/CharCodes';
 import { copyStringIntoBuffer, last } from '../../utils';
+import { PDFClasses } from '../../api/objects';
 
 export type IndirectObject = [PDFRef, PDFObject];
 
 class PDFObjectStream extends PDFFlateStream {
+  static className = () => PDFClasses.PDFObjectStream;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFObjectStream;
+  }
   static withContextAndObjects = (
     context: PDFContext,
     objects: IndirectObject[],

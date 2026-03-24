@@ -17,7 +17,6 @@ import {
   PDFRef,
   PDFHexString,
   PDFString,
-  PDFStream,
   PDFAcroListBox,
   AcroChoiceFlags,
   PDFWidgetAnnotation,
@@ -28,6 +27,7 @@ import {
   assertOrUndefined,
   assertPositive,
 } from '../../utils';
+import { isPDFInstance, PDFClasses } from '../objects';
 
 /**
  * Represents an option list field of a [[PDFForm]].
@@ -41,6 +41,10 @@ import {
  * more than one option (see [[PDFOptionList.isMultiselect]]).
  */
 export default class PDFOptionList extends PDFField {
+  static className = () => PDFClasses.PDFOptionList;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFOptionList;
+  }
   /**
    * > **NOTE:** You probably don't want to call this method directly. Instead,
    * > consider using the [[PDFForm.getOptionList]] method, which will create
@@ -498,8 +502,10 @@ export default class PDFOptionList extends PDFField {
     const widgets = this.acroField.getWidgets();
     for (let idx = 0, len = widgets.length; idx < len; idx++) {
       const widget = widgets[idx];
-      const hasAppearances =
-        widget.getAppearances()?.normal instanceof PDFStream;
+      const hasAppearances = isPDFInstance(
+        widget.getAppearances()?.normal,
+        PDFClasses.PDFStream,
+      );
       if (!hasAppearances) return true;
     }
 

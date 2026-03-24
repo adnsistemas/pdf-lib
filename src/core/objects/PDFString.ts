@@ -10,8 +10,13 @@ import {
   hasUtf16BOM,
 } from '../../utils';
 import { InvalidPDFDateStringError } from '../errors';
+import { PDFClasses } from '../../api/objects';
 
 class PDFString extends PDFObject {
+  static className = () => PDFClasses.PDFString;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFString;
+  }
   // The PDF spec allows newlines and parens to appear directly within a literal
   // string. These character _may_ be escaped. But they do not _have_ to be. So
   // for simplicity, we will not bother escaping them.

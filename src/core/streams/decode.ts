@@ -1,3 +1,4 @@
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 import { UnexpectedObjectTypeError, UnsupportedEncodingError } from '../errors';
 import PDFArray from '../objects/PDFArray';
 import PDFDict from '../objects/PDFDict';
@@ -22,10 +23,10 @@ const decodeStream = (
   }
   if (encoding === PDFName.of('LZWDecode')) {
     let earlyChange = 1;
-    if (params instanceof PDFDict) {
-      const EarlyChange = params.lookup(PDFName.of('EarlyChange'));
-      if (EarlyChange instanceof PDFNumber) {
-        earlyChange = EarlyChange.asNumber();
+    if (isPDFInstance(params, PDFClasses.PDFDict)) {
+      const EarlyChange = (params as PDFDict).lookup(PDFName.of('EarlyChange'));
+      if (isPDFInstance(EarlyChange, PDFClasses.PDFNumber)) {
+        earlyChange = (EarlyChange as PDFNumber).asNumber();
       }
     }
     return new LZWStream(stream, undefined, earlyChange as 0 | 1);
@@ -56,17 +57,17 @@ export const decodePDFRawStream = ({
   const Filter = dict.lookup(PDFName.of('Filter'));
   const DecodeParms = dict.lookup(PDFName.of('DecodeParms'));
 
-  if (Filter instanceof PDFName) {
+  if (isPDFInstance(Filter, PDFClasses.PDFName)) {
     stream = decodeStream(
       stream,
-      Filter,
+      Filter as PDFName,
       DecodeParms as PDFDict | typeof PDFNull | undefined,
     );
-  } else if (Filter instanceof PDFArray) {
-    for (let idx = 0, len = Filter.size(); idx < len; idx++) {
+  } else if (isPDFInstance(Filter, PDFClasses.PDFArray)) {
+    for (let idx = 0, len = (Filter as PDFArray).size(); idx < len; idx++) {
       stream = decodeStream(
         stream,
-        Filter.lookup(idx, PDFName),
+        (Filter as PDFArray).lookup(idx, PDFName),
         DecodeParms && (DecodeParms as PDFArray).lookupMaybe(idx, PDFDict),
       );
     }

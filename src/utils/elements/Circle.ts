@@ -1,3 +1,4 @@
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 import {
   distance,
   distanceCoords,
@@ -11,6 +12,10 @@ import {
 import GraphElement from './GraphElement';
 import Point from './Point';
 export default class Circle extends GraphElement {
+  static className = () => PDFClasses.Circle;
+  myClass(): PDFClasses {
+    return PDFClasses.Circle;
+  }
   O: Point;
   r: number;
 
@@ -35,9 +40,9 @@ export default class Circle extends GraphElement {
 
   isEqual(element: GraphElement): boolean {
     return (
-      element instanceof Circle &&
-      this.center().isEqual(element.center()) &&
-      isEqual(this.ray(), element.ray())
+      isPDFInstance(element, PDFClasses.Circle) &&
+      this.center().isEqual((element as Circle).center()) &&
+      isEqual(this.ray(), (element as Circle).ray())
     );
   }
 

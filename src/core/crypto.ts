@@ -14,6 +14,7 @@
  */
 /* tslint:disable */
 
+import { isPDFInstance, PDFClasses } from '../api/objects';
 import { arrayAsString, isArrayEqual } from '../utils/arrays';
 import { stringAsByteArray } from '../utils/strings';
 import PDFBool from './objects/PDFBool';
@@ -701,6 +702,10 @@ class NullCipher {
 }
 
 class AESBaseCipher {
+  static className = () => PDFClasses.AESBaseCipher;
+  myClass(): PDFClasses {
+    return PDFClasses.AESBaseCipher;
+  }
   protected _s: Uint8Array;
   protected _keySize!: number;
   protected _key!: Uint8Array;
@@ -1475,7 +1480,7 @@ class CipherTransform {
 
   encryptString(s: string) {
     const cipher = this.StringCipherConstructor();
-    if (cipher instanceof AESBaseCipher) {
+    if (isPDFInstance(cipher, PDFClasses.AESBaseCipher)) {
       // Append some chars equal to "16 - (M mod 16)"
       // where M is the string length (see section 7.6.2 in PDF specification)
       // to have a final string where the length is a multiple of 16.
@@ -1507,7 +1512,7 @@ class CipherTransform {
     }
 
     let data = stringAsByteArray(s);
-    data = cipher.encrypt(data);
+    data = (cipher as NullCipher).encrypt(data);
     return arrayAsString(data);
   }
 }
@@ -1559,7 +1564,10 @@ class CipherTransformFactory {
         // Trying to find default handler -- it usually has Length.
         const cfDict = dict.get(PDFName.of('CF')) as PDFDict;
         const streamCryptoName = dict.get(PDFName.of('StmF')) as PDFName;
-        if (cfDict instanceof PDFDict && streamCryptoName instanceof PDFName) {
+        if (
+          isPDFInstance(cfDict, PDFClasses.PDFDict) &&
+          isPDFInstance(streamCryptoName, PDFClasses.PDFName)
+        ) {
           cfDict.suppressEncryption = true;
           const handlerDict = cfDict.get(
             PDFName.of(streamCryptoName.asString()),
@@ -1686,7 +1694,7 @@ class CipherTransformFactory {
 
     if (algorithm >= 4) {
       const cf = dict.get(PDFName.of('CF')) as PDFDict;
-      if (cf instanceof PDFDict) {
+      if (isPDFInstance(cf, PDFClasses.PDFDict)) {
         // The 'CF' dictionary itself should not be encrypted, and by setting
         // `suppressEncryption` we can prevent an infinite loop inside of
         // `XRef_fetchUncompressed` if the dictionary contains indirect
@@ -1948,7 +1956,7 @@ class CipherTransformFactory {
     gen: number,
     key: Uint8Array,
   ) {
-    if (!(name instanceof PDFName)) {
+    if (!isPDFInstance(name, PDFClasses.PDFName)) {
       throw new Error('Invalid crypt filter name.');
     }
     const cryptFilter = cf.get(

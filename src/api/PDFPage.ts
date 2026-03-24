@@ -59,6 +59,7 @@ import {
   assertIsOneOfOrUndefined,
 } from '../utils';
 import { drawSvg } from './svg';
+import { isPDFInstance, PDFClasses } from './objects';
 
 /**
  * Represents a single page of a [[PDFDocument]].
@@ -652,7 +653,8 @@ export default class PDFPage {
 
     for (let idx = 0; idx < annots.size(); idx++) {
       const annot = annots.lookup(idx);
-      if (annot instanceof PDFDict) this.scaleAnnot(annot, x, y);
+      if (isPDFInstance(annot, PDFClasses.PDFDict))
+        this.scaleAnnot(annot as PDFDict, x, y);
     }
   }
 
@@ -1680,14 +1682,16 @@ export default class PDFPage {
     const selectors = ['RD', 'CL', 'Vertices', 'QuadPoints', 'L', 'Rect'];
     for (let idx = 0, len = selectors.length; idx < len; idx++) {
       const list = annot.lookup(PDFName.of(selectors[idx]));
-      if (list instanceof PDFArray) list.scalePDFNumbers(x, y);
+      if (isPDFInstance(list, PDFClasses.PDFArray))
+        (list as PDFArray).scalePDFNumbers(x, y);
     }
 
     const inkLists = annot.lookup(PDFName.of('InkList'));
-    if (inkLists instanceof PDFArray) {
-      for (let idx = 0, len = inkLists.size(); idx < len; idx++) {
-        const arr = inkLists.lookup(idx);
-        if (arr instanceof PDFArray) arr.scalePDFNumbers(x, y);
+    if (isPDFInstance(inkLists, PDFClasses.PDFArray)) {
+      for (let idx = 0, len = (inkLists as PDFArray).size(); idx < len; idx++) {
+        const arr = (inkLists as PDFArray).lookup(idx);
+        if (isPDFInstance(arr, PDFClasses.PDFArray))
+          (arr as PDFArray).scalePDFNumbers(x, y);
       }
     }
   }

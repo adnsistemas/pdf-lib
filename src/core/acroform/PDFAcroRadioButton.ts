@@ -5,8 +5,13 @@ import PDFAcroButton from './PDFAcroButton';
 import PDFContext from '../PDFContext';
 import { AcroButtonFlags } from './flags';
 import { InvalidAcroFieldValueError } from '../errors';
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 
 class PDFAcroRadioButton extends PDFAcroButton {
+  static className = () => PDFClasses.PDFAcroRadioButton;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFAcroRadioButton;
+  }
   static fromDict = (dict: PDFDict, ref: PDFRef) =>
     new PDFAcroRadioButton(dict, ref);
 
@@ -38,7 +43,7 @@ class PDFAcroRadioButton extends PDFAcroButton {
 
   getValue(): PDFName {
     const v = this.V();
-    if (v instanceof PDFName) return v;
+    if (isPDFInstance(v, PDFClasses.PDFName)) return v as PDFName;
     return PDFName.of('Off');
   }
 

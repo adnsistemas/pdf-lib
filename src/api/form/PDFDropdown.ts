@@ -17,12 +17,12 @@ import {
   PDFHexString,
   PDFRef,
   PDFString,
-  PDFStream,
   PDFWidgetAnnotation,
   PDFAcroComboBox,
   AcroChoiceFlags,
 } from '../../core';
 import { assertIs, assertOrUndefined, assertPositive } from '../../utils';
+import { isPDFInstance, PDFClasses } from '../objects';
 
 /**
  * Represents a dropdown field of a [[PDFForm]].
@@ -37,6 +37,10 @@ import { assertIs, assertOrUndefined, assertPositive } from '../../utils';
  * choose an option from the list (see [[PDFDropdown.isEditable]]).
  */
 export default class PDFDropdown extends PDFField {
+  static className = () => PDFClasses.PDFDropdown;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFDropdown;
+  }
   /**
    * > **NOTE:** You probably don't want to call this method directly. Instead,
    * > consider using the [[PDFForm.getDropdown]] method, which will create an
@@ -579,8 +583,10 @@ export default class PDFDropdown extends PDFField {
     const widgets = this.acroField.getWidgets();
     for (let idx = 0, len = widgets.length; idx < len; idx++) {
       const widget = widgets[idx];
-      const hasAppearances =
-        widget.getAppearances()?.normal instanceof PDFStream;
+      const hasAppearances = isPDFInstance(
+        widget.getAppearances()?.normal,
+        PDFClasses.PDFStream,
+      );
       if (!hasAppearances) return true;
     }
 

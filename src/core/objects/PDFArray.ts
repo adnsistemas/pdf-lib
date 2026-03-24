@@ -12,8 +12,13 @@ import PDFContext from '../PDFContext';
 import CharCodes from '../syntax/CharCodes';
 import { PDFArrayIsNotRectangleError } from '../errors';
 import PDFRawStream from './PDFRawStream';
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 
 class PDFArray extends PDFObject {
+  static className = () => PDFClasses.PDFArray;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFArray;
+  }
   static withContext = (context: PDFContext) => new PDFArray(context);
 
   private readonly array: PDFObject[];
@@ -178,9 +183,9 @@ class PDFArray extends PDFObject {
   scalePDFNumbers(x: number, y: number): void {
     for (let idx = 0, len = this.size(); idx < len; idx++) {
       const el = this.lookup(idx);
-      if (el instanceof PDFNumber) {
+      if (isPDFInstance(el, PDFClasses.PDFNumber)) {
         const factor = idx % 2 === 0 ? x : y;
-        this.set(idx, PDFNumber.of(el.asNumber() * factor));
+        this.set(idx, PDFNumber.of((el as PDFNumber).asNumber() * factor));
       }
     }
   }

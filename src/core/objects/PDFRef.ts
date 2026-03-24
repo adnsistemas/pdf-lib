@@ -1,11 +1,16 @@
 import { PrivateConstructorError } from '../errors';
 import PDFObject from '../objects/PDFObject';
 import { copyStringIntoBuffer } from '../../utils';
+import { PDFClasses } from '../../api';
 
 const ENFORCER = {};
 const pool = new Map<string, PDFRef>();
 
 class PDFRef extends PDFObject {
+  static className = () => PDFClasses.PDFRef;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFRef;
+  }
   static of = (objectNumber: number, generationNumber = 0) => {
     const tag = `${objectNumber} ${generationNumber} R`;
 

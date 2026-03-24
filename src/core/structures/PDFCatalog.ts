@@ -6,8 +6,13 @@ import PDFPageTree from './PDFPageTree';
 import { PDFAcroForm } from '../acroform';
 import ViewerPreferences from '../interactive/ViewerPreferences';
 import PDFArray from '../objects/PDFArray';
+import { PDFClasses } from '../../api/objects';
 
 class PDFCatalog extends PDFDict {
+  static className = () => PDFClasses.PDFCatalog;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFCatalog;
+  }
   static withContextAndPages = (
     context: PDFContext,
     pages: PDFPageTree | PDFRef,

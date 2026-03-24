@@ -10,10 +10,15 @@ import PDFStream from './PDFStream';
 import PDFString from './PDFString';
 import PDFContext from '../PDFContext';
 import CharCodes from '../syntax/CharCodes';
+import { PDFClasses } from '../../api/objects';
 
 export type DictMap = Map<PDFName, PDFObject>;
 
 class PDFDict extends PDFObject {
+  static className = () => PDFClasses.PDFDict;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFDict;
+  }
   static withContext = (context: PDFContext) => new PDFDict(new Map(), context);
 
   static fromMapWithContext = (map: DictMap, context: PDFContext) =>

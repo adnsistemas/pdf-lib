@@ -3,8 +3,13 @@ import PDFAcroButton from './PDFAcroButton';
 import PDFContext from '../PDFContext';
 import PDFRef from '../objects/PDFRef';
 import { AcroButtonFlags } from './flags';
+import { PDFClasses } from '../../api/objects';
 
 class PDFAcroPushButton extends PDFAcroButton {
+  static className = () => PDFClasses.PDFAcroPushButton;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFAcroPushButton;
+  }
   static fromDict = (dict: PDFDict, ref: PDFRef) =>
     new PDFAcroPushButton(dict, ref);
 

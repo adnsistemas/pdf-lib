@@ -1,7 +1,4 @@
-import {
-  DefaultDocumentSnapshot,
-  defaultDocumentSnapshot,
-} from '../../api/snapshot';
+import { defaultDocumentSnapshot } from '../../api/snapshot';
 import type { DocumentSnapshot } from '../../api/snapshot';
 import PDFCrossRefSection from '../document/PDFCrossRefSection';
 import PDFHeader from '../document/PDFHeader';
@@ -19,6 +16,7 @@ import PDFSecurity from '../security/PDFSecurity';
 import PDFStream from '../objects/PDFStream';
 import PDFName from '../objects/PDFName';
 import PDFRawStream from '../objects/PDFRawStream';
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 
 export interface SerializationInfo {
   size: number;
@@ -30,6 +28,10 @@ export interface SerializationInfo {
 }
 
 class PDFWriter {
+  static className = () => PDFClasses.PDFWriter;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFWriter;
+  }
   static forContext = (context: PDFContext, objectsPerTick: number) =>
     new PDFWriter(context, objectsPerTick, defaultDocumentSnapshot);
 
@@ -96,8 +98,9 @@ class PDFWriter {
           if (objects[idx][0].objectNumber < checkWatermark) break;
           const object = objects[idx][1];
           if (
-            object instanceof PDFRawStream &&
-            object.dict.lookup(PDFName.of('Type')) === PDFName.of('XRef')
+            isPDFInstance(object, PDFClasses.PDFRawStream) &&
+            (object as PDFRawStream).dict.lookup(PDFName.of('Type')) ===
+              PDFName.of('XRef')
           ) {
             this._lastXRefObjectNumber = objects[idx][0].objectNumber;
             break;
@@ -112,7 +115,10 @@ class PDFWriter {
   }
 
   async serializeToBuffer(): Promise<Uint8Array> {
-    const incremental = !(this.snapshot instanceof DefaultDocumentSnapshot);
+    const incremental = !isPDFInstance(
+      this.snapshot,
+      PDFClasses.DefaultDocumentSnapshot,
+    );
     const { size, header, indirectObjects, xref, trailerDict, trailer } =
       await this.computeBufferSize(incremental);
 
@@ -157,8 +163,9 @@ class PDFWriter {
       buffer[offset++] = CharCodes.Newline;
       buffer[offset++] = CharCodes.Newline;
 
-      const n =
-        object instanceof PDFObjectStream ? object.getObjectsCount() : 1;
+      const n = isPDFInstance(object, PDFClasses.PDFObjectStream)
+        ? (object as PDFObjectStream).getObjectsCount()
+        : 1;
       if (this.shouldWaitForTick(n)) await waitForTick();
     }
 
@@ -264,14 +271,14 @@ class PDFWriter {
   }
 
   protected encrypt(ref: PDFRef, object: PDFObject, security: PDFSecurity) {
-    if (object instanceof PDFStream) {
+    if (isPDFInstance(object, PDFClasses.PDFStream)) {
       const encryptFn = security.getEncryptFn(
         ref.objectNumber,
         ref.generationNumber,
       );
-      const unencryptedContents = object.getContents();
+      const unencryptedContents = (object as PDFStream).getContents();
       const encryptedContents = encryptFn(unencryptedContents);
-      object.updateContents(encryptedContents);
+      (object as PDFStream).updateContents(encryptedContents);
     }
   }
 

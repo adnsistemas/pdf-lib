@@ -14,6 +14,7 @@ import PDFPageLeaf from '../structures/PDFPageLeaf';
 import CharCodes from '../syntax/CharCodes';
 import { TransformationMatrix } from '../../types/matrix';
 import { mergeIntoTypedArray } from '../../utils';
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 
 /**
  * Represents a page bounding box.
@@ -125,10 +126,10 @@ class PDFPageEmbedder {
       const stream = contents.lookup(idx, PDFStream);
 
       let content: Uint8Array;
-      if (stream instanceof PDFRawStream) {
-        content = decodePDFRawStream(stream).decode();
-      } else if (stream instanceof PDFContentStream) {
-        content = stream.getUnencodedContents();
+      if (isPDFInstance(stream, PDFClasses.PDFRawStream)) {
+        content = decodePDFRawStream(stream as PDFRawStream).decode();
+      } else if (isPDFInstance(stream, PDFClasses.PDFContentStream)) {
+        content = (stream as PDFContentStream).getUnencodedContents();
       } else {
         throw new UnrecognizedStreamTypeError(stream);
       }

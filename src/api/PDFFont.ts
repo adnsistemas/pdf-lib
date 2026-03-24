@@ -7,6 +7,7 @@ import {
   StandardFontEmbedder,
 } from '../core';
 import { assertIs, assertOrUndefined } from '../utils';
+import { isPDFInstance, PDFClasses } from './objects';
 
 export type FontEmbedder = CustomFontEmbedder | StandardFontEmbedder;
 
@@ -127,10 +128,11 @@ export default class PDFFont implements Embeddable {
    * @returns The set of unicode code points supported by this font.
    */
   getCharacterSet(): number[] {
-    if (this.embedder instanceof StandardFontEmbedder) {
-      return this.embedder.encoding.supportedCodePoints;
+    if (isPDFInstance(this.embedder, PDFClasses.StandardFontEmbedder)) {
+      return (this.embedder as StandardFontEmbedder).encoding
+        .supportedCodePoints;
     } else {
-      return this.embedder.font.characterSet;
+      return (this.embedder as CustomFontEmbedder).font.characterSet;
     }
   }
 

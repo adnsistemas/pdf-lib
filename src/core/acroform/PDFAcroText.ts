@@ -6,8 +6,13 @@ import PDFHexString from '../objects/PDFHexString';
 import PDFName from '../objects/PDFName';
 import PDFRef from '../objects/PDFRef';
 import PDFAcroTerminal from './PDFAcroTerminal';
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 
 class PDFAcroText extends PDFAcroTerminal {
+  static className = () => PDFClasses.PDFAcroText;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFAcroText;
+  }
   static fromDict = (dict: PDFDict, ref: PDFRef) => new PDFAcroText(dict, ref);
 
   static create = (context: PDFContext) => {
@@ -21,13 +26,13 @@ class PDFAcroText extends PDFAcroTerminal {
 
   MaxLen(): PDFNumber | undefined {
     const maxLen = this.dict.lookup(PDFName.of('MaxLen'));
-    if (maxLen instanceof PDFNumber) return maxLen;
+    if (isPDFInstance(maxLen, PDFClasses.PDFNumber)) return maxLen as PDFNumber;
     return undefined;
   }
 
   Q(): PDFNumber | undefined {
     const q = this.dict.lookup(PDFName.of('Q'));
-    if (q instanceof PDFNumber) return q;
+    if (isPDFInstance(q, PDFClasses.PDFNumber)) return q as PDFNumber;
     return undefined;
   }
 
@@ -68,7 +73,11 @@ class PDFAcroText extends PDFAcroTerminal {
 
   getValue(): PDFString | PDFHexString | undefined {
     const v = this.V();
-    if (v instanceof PDFString || v instanceof PDFHexString) return v;
+    if (
+      isPDFInstance(v, PDFClasses.PDFString) ||
+      isPDFInstance(v, PDFClasses.PDFHexString)
+    )
+      return v as PDFString | PDFHexString;
     return undefined;
   }
 }

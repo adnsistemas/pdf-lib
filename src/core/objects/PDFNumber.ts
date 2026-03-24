@@ -1,8 +1,13 @@
+import { PDFClasses } from '../../api/objects';
 import { copyStringIntoBuffer, numberToString } from '../../utils/index';
 
 import PDFObject from './PDFObject';
 
 class PDFNumber extends PDFObject {
+  static className = () => PDFClasses.PDFNumber;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFNumber;
+  }
   static of = (value: number) => new PDFNumber(value);
 
   private readonly numberValue: number;

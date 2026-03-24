@@ -1,5 +1,6 @@
 import pako from 'pako';
-import type { DocumentSnapshot } from '../api';
+import type { DocumentSnapshot } from '../api/snapshot/DocumentSnapshot';
+import { isPDFInstance, PDFClasses } from '../api/objects';
 
 import PDFHeader from './document/PDFHeader';
 import { UnexpectedObjectTypeError } from './errors';
@@ -181,17 +182,24 @@ class PDFContext {
     // removed in next breaking API change.
     const preservePDFNull = types.includes(PDFNull);
 
-    const result = ref instanceof PDFRef ? this.indirectObjects.get(ref) : ref;
+    const result = isPDFInstance(ref, PDFClasses.PDFRef)
+      ? this.indirectObjects.get(ref as PDFRef)
+      : ref;
 
-    if (!result || (result === PDFNull && !preservePDFNull)) return undefined;
+    if (
+      !result ||
+      (isPDFInstance(result, PDFClasses.PDFNull) && !preservePDFNull)
+    )
+      return undefined;
 
     for (let idx = 0, len = types.length; idx < len; idx++) {
       const type = types[idx];
-      if (type === PDFNull) {
-        if (result === PDFNull) return result;
-      } else {
-        if (result instanceof type) return result;
-      }
+      if (
+        isPDFInstance(type, PDFClasses.PDFNull) &&
+        isPDFInstance(result, PDFClasses.PDFNull)
+      )
+        return result;
+      if (isPDFInstance(result, type)) return result;
     }
     throw new UnexpectedObjectTypeError(types, result);
   }
@@ -214,24 +222,27 @@ class PDFContext {
   ): PDFString | PDFHexString;
 
   lookup(ref: LookupKey, ...types: any[]) {
-    const result = ref instanceof PDFRef ? this.indirectObjects.get(ref) : ref;
+    const result = isPDFInstance(ref, PDFClasses.PDFRef)
+      ? this.indirectObjects.get(ref as PDFRef)
+      : ref;
 
     if (types.length === 0) return result;
 
     for (let idx = 0, len = types.length; idx < len; idx++) {
       const type = types[idx];
-      if (type === PDFNull) {
-        if (result === PDFNull) return result;
-      } else {
-        if (result instanceof type) return result;
-      }
+      if (
+        isPDFInstance(type, PDFClasses.PDFNull) &&
+        isPDFInstance(result, PDFClasses.PDFNull)
+      )
+        return result;
+      if (isPDFInstance(result, type)) return result;
     }
 
     throw new UnexpectedObjectTypeError(types, result);
   }
 
   getRef(pdfObject: PDFObject | PDFRef): PDFRef | undefined {
-    if (pdfObject instanceof PDFRef) return pdfObject;
+    if (isPDFInstance(pdfObject, PDFClasses.PDFRef)) return pdfObject as PDFRef;
     return this.getObjectRef(pdfObject);
   }
 
@@ -261,7 +272,7 @@ class PDFContext {
   obj(literal: LiteralArray): PDFArray;
 
   obj(literal: Literal) {
-    if (literal instanceof PDFObject) {
+    if (isPDFInstance(literal, PDFClasses.PDFObject)) {
       return literal;
     } else if (literal === null || literal === undefined) {
       return PDFNull;
@@ -321,34 +332,35 @@ class PDFContext {
     }: LiteralConfig = {},
   ): Literal | PDFObject {
     const cfg = { deep, literalRef, literalStreamDict, literalString };
-    if (obj instanceof PDFArray) {
-      const lit = obj.asArray();
+    if (isPDFInstance(obj, PDFClasses.PDFArray)) {
+      const lit = (obj as PDFArray).asArray();
       return deep ? lit.map((value) => this.getLiteral(value, cfg)) : lit;
-    } else if (obj instanceof PDFBool) {
-      return obj.asBoolean();
-    } else if (obj instanceof PDFDict) {
+    } else if (isPDFInstance(obj, PDFClasses.PDFBool)) {
+      return (obj as PDFBool).asBoolean();
+    } else if (isPDFInstance(obj, PDFClasses.PDFDict)) {
       const lit: LiteralObject = {};
-      const entries = obj.entries();
+      const entries = (obj as PDFDict).entries();
       for (let idx = 0, len = entries.length; idx < len; idx++) {
         const [name, value] = entries[idx];
         lit[this.getLiteral(name)] = deep ? this.getLiteral(value, cfg) : value;
       }
       return lit;
-    } else if (obj instanceof PDFName) {
-      return obj.decodeText();
+    } else if (isPDFInstance(obj, PDFClasses.PDFName)) {
+      return (obj as PDFName).decodeText();
     } else if (obj === PDFNull) {
       return null;
-    } else if (obj instanceof PDFNumber) {
-      return obj.asNumber();
-    } else if (obj instanceof PDFRef && literalRef) {
-      return obj.objectNumber;
-    } else if (obj instanceof PDFStream && literalStreamDict) {
-      return this.getLiteral(obj.dict, cfg);
+    } else if (isPDFInstance(obj, PDFClasses.PDFNumber)) {
+      return (obj as PDFNumber).asNumber();
+    } else if (isPDFInstance(obj, PDFClasses.PDFRef) && literalRef) {
+      return (obj as PDFRef).objectNumber;
+    } else if (isPDFInstance(obj, PDFClasses.PDFStream) && literalStreamDict) {
+      return this.getLiteral((obj as PDFStream).dict, cfg);
     } else if (
-      (obj instanceof PDFString || obj instanceof PDFHexString) &&
+      (isPDFInstance(obj, PDFClasses.PDFString) ||
+        isPDFInstance(obj, PDFClasses.PDFHexString)) &&
       literalString
     ) {
-      return obj.asString();
+      return (obj as PDFString | PDFHexString).asString();
     }
     return obj;
   }
@@ -457,17 +469,19 @@ class PDFContext {
   private objectContains(container: PDFObject, target: PDFObject): boolean {
     if (container === target) return true;
 
-    if (container instanceof PDFDict) {
-      const values = container.values();
+    if (isPDFInstance(container, PDFClasses.PDFDict)) {
+      const values = (container as PDFDict).values();
       for (let i = 0, len = values.length; i < len; i++) {
         if (this.objectContains(values[i], target)) return true;
       }
-    } else if (container instanceof PDFArray) {
-      for (let i = 0, len = container.size(); i < len; i++) {
-        if (this.objectContains(container.get(i), target)) return true;
+    } else if (isPDFInstance(container, PDFClasses.PDFArray)) {
+      for (let i = 0, len = (container as PDFArray).size(); i < len; i++) {
+        if (this.objectContains((container as PDFArray).get(i), target))
+          return true;
       }
-    } else if (container instanceof PDFStream) {
-      if (this.objectContains(container.dict, target)) return true;
+    } else if (isPDFInstance(container, PDFClasses.PDFStream)) {
+      if (this.objectContains((container as PDFStream).dict, target))
+        return true;
     }
 
     return false;

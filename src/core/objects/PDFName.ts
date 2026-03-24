@@ -8,6 +8,7 @@ import {
   toCharCode,
   toHexString,
 } from '../../utils';
+import { PDFClasses } from '../../api/objects';
 
 const decodeName = (name: string) =>
   name.replace(/#([\dABCDEF]{2})/g, (_, hex) => charFromHexCode(hex));
@@ -21,6 +22,10 @@ const ENFORCER = {};
 const pool = new Map<string, PDFName>();
 
 class PDFName extends PDFObject {
+  static className = () => PDFClasses.PDFName;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFName;
+  }
   static of = (name: string): PDFName => {
     const decodedValue = decodeName(name);
 

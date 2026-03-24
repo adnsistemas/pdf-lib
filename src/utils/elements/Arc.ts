@@ -1,3 +1,4 @@
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 import { angleABC, distance, distanceCoords, rotate, vector } from '../maths';
 
 import Circle from './Circle';
@@ -5,6 +6,10 @@ import GraphElement from './GraphElement';
 import Point from './Point';
 
 export default class Arc extends GraphElement {
+  static className = () => PDFClasses.Arc;
+  myClass(): PDFClasses {
+    return PDFClasses.Arc;
+  }
   O: Point;
   A: Point;
   B: Point;
@@ -51,13 +56,13 @@ export default class Arc extends GraphElement {
   }
 
   isEqual(element: GraphElement): boolean {
-    if (!(element instanceof Arc)) return false;
+    if (!isPDFInstance(element, PDFClasses.Arc)) return false;
     const dest = this.destination();
     const o = this.origin();
-    const eDest = element.destination();
-    const eO = element.origin();
+    const eDest = (element as Arc).destination();
+    const eO = (element as Arc).origin();
     return (
-      this.getCircle().isEqual(element.getCircle()) &&
+      this.getCircle().isEqual((element as Arc).getCircle()) &&
       ((dest.isEqual(eDest) && o.isEqual(eO)) ||
         (dest.isEqual(eO) && o.isEqual(eDest)))
     );

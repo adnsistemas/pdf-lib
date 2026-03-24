@@ -20,6 +20,7 @@ import {
   PDFWidgetAnnotation,
 } from '../../core';
 import { assertIs, assertOrUndefined } from '../../utils';
+import { isPDFInstance, PDFClasses } from '../objects';
 
 /**
  * Represents a check box field of a [[PDFForm]].
@@ -31,6 +32,10 @@ import { assertIs, assertOrUndefined } from '../../utils';
  * square in shape and display a check mark when they are in the `on` state.
  */
 export default class PDFCheckBox extends PDFField {
+  static className = () => PDFClasses.PDFCheckBox;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFCheckBox;
+  }
   /**
    * > **NOTE:** You probably don't want to call this method directly. Instead,
    * > consider using the [[PDFForm.getCheckBox]] method, which will create an
@@ -201,8 +206,8 @@ export default class PDFCheckBox extends PDFField {
       const state = widget.getAppearanceState();
       const normal = widget.getAppearances()?.normal;
 
-      if (!(normal instanceof PDFDict)) return true;
-      if (state && !normal.has(state)) return true;
+      if (!isPDFInstance(normal, PDFClasses.PDFDict)) return true;
+      if (state && !(normal as PDFDict).has(state)) return true;
     }
 
     return false;

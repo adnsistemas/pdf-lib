@@ -11,8 +11,13 @@ import {
   byteArrayToHexString,
 } from '../../utils';
 import { InvalidPDFDateStringError } from '../errors';
+import { PDFClasses } from '../../api/objects';
 
 class PDFHexString extends PDFObject {
+  static className = () => PDFClasses.PDFHexString;
+  myClass(): PDFClasses {
+    return PDFClasses.PDFHexString;
+  }
   static of = (value: string) => new PDFHexString(value);
 
   static fromText = (value: string) => {

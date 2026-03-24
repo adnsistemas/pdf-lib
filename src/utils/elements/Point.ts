@@ -1,9 +1,14 @@
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 import type { Coordinates } from '../../types';
 
 import { isEqual, plus } from '../maths';
 import GraphElement from './GraphElement';
 
 export default class Point extends GraphElement {
+  static className = () => PDFClasses.Point;
+  myClass(): PDFClasses {
+    return PDFClasses.Point;
+  }
   static type = 'PointFixed';
 
   x: number;
@@ -20,9 +25,9 @@ export default class Point extends GraphElement {
   }
 
   isEqual(element: GraphElement): boolean {
-    if (!(element instanceof Point)) return false;
+    if (!isPDFInstance(element, PDFClasses.Point)) return false;
     const A = this.toCoords();
-    const B = element.toCoords();
+    const B = (element as Point).toCoords();
     return isEqual(A.x, B.x) && isEqual(A.y, B.y);
   }
 
