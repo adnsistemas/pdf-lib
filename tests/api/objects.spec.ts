@@ -1,5 +1,5 @@
 import { isPDFInstance, PDFClasses } from '../../src/api/objects';
-import { PDFNumber, PDFName } from '../../src/index';
+import { PDFNumber, PDFName, PDFNull } from '../../src/index';
 
 describe('isPDFInstance', () => {
   const pStr = PDFName.of('Hola');
@@ -15,6 +15,11 @@ describe('isPDFInstance', () => {
   it('identifies instances as being superclases', () => {
     expect(isPDFInstance(pStr, PDFClasses.PDFObject)).toBeTruthy();
     expect(isPDFInstance(pNum, PDFClasses.PDFObject)).toBeTruthy();
+  });
+
+  it('properly handles PDFNull', () => {
+    expect(isPDFInstance(pNum, PDFClasses.PDFNull)).toBeFalsy();
+    expect(isPDFInstance(PDFNull, PDFClasses.PDFNull)).toBeTruthy();
   });
 
   it('does not fail on incorrect usage', () => {
