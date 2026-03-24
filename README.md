@@ -46,6 +46,7 @@ Install with: `npm install @adnsistemas/pdf-lib`
 
 ## Table of Contents
 
+- [Important Changes](#changes)
 - [Features](#features)
 - [Motivation](#motivation)
 - [Usage Examples](#usage-examples)
@@ -85,6 +86,10 @@ Install with: `npm install @adnsistemas/pdf-lib`
 - [Prior Art](#prior-art)
 - [Git History Rewrite](#git-history-rewrite)
 - [License](#license)
+
+## Changes
+
+- 2026-3-24: version 2.9.0 replaced the use of ```instanceof``` by the function ```isPDFInstance()``` which allows the library to properly function in complex environments where code comes from more than a single pdf-lib package (issue detected on monorepos using Vertest). This makes the library more flexible, but slower than previous versions.
 
 ## Features
 
@@ -318,7 +323,7 @@ If you need this functionality, you should take a look at [@adnsistemas/placehol
 
 <!-- prettier-ignore -->
 ```js
-import { PDFDocument, StandardFonts, rgb, PDFArray, PDFNumber, PDFName, PDFHexString, PDFString, PDFInvalidObject } from 'pdf-lib';
+import { PDFDocument, StandardFonts, rgb, PDFArray, PDFNumber, PDFName, PDFHexString, PDFString, PDFInvalidObject, isPDFInstance, PDFClasses } from 'pdf-lib';
 const pdfBytes = ...
 
 const pdfDoc = await PDFDocument.load(pdfBytes, {forIncrementalUpdate: true});
@@ -413,7 +418,7 @@ if (acroForm.dict.has(PDFName.of('SigFlags'))) {
 const updatedFlags = PDFNumber.of(sigFlags!.asNumber() | 1 | 2);
 acroForm.dict.set(PDFName.of('SigFlags'), updatedFlags);
 let fields = acroForm.dict.get(PDFName.of('Fields'));
-if (!(fields instanceof PDFArray)) {
+if (!isPDFInstance(fields, PDFClasses.PDFArray)) {
   fields = pdfDoc.context.obj([]);
   acroForm.dict.set(PDFName.of('Fields'), fields);
 }
