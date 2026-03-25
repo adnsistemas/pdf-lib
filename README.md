@@ -89,7 +89,7 @@ Install with: `npm install @adnsistemas/pdf-lib`
 
 ## Changes
 
-- 2026-3-24: version 2.9.0 replaced the use of ```instanceof``` by the function ```isPDFInstance()``` which allows the library to properly function in complex environments where code comes from more than a single pdf-lib package (issue detected on monorepos using Vertest). This makes the library more flexible, but slower than previous versions.
+- 2026-03-24: version 2.9.0 replaced the use of ```instanceof``` by the function ```isPDFInstance()``` which allows the library to properly function in complex environments where code comes from more than a single pdf-lib package (issue detected on monorepos using Vertest). This makes the library more flexible, but slower than previous versions.
 
 ## Features
 

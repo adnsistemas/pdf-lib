@@ -86,8 +86,8 @@ class PDFContext {
 
   security?: PDFSecurity;
 
-  private readonly indirectObjects: Map<PDFRef, PDFObject>;
-  private readonly objectsPreviousVersions: Map<PDFRef, PDFObject[]>;
+  private readonly indirectObjects: Map<string, [PDFRef, PDFObject]>;
+  private readonly objectsPreviousVersions: Map<string, PDFObject[]>;
 
   private pushGraphicsStateContentStreamRef?: PDFRef;
   private popGraphicsStateContentStreamRef?: PDFRef;
@@ -112,17 +112,17 @@ class PDFContext {
 
   assign(ref: PDFRef, object: PDFObject): void {
     if (this.preserveObjectsVersions) {
-      const prevOV = this.indirectObjects.get(ref);
+      const prevOV = this.indirectObjects.get(ref.toString());
       if (prevOV) {
-        const prevList = this.objectsPreviousVersions.get(ref);
+        const prevList = this.objectsPreviousVersions.get(ref.toString());
         if (!prevList) {
-          this.objectsPreviousVersions.set(ref, [prevOV]);
+          this.objectsPreviousVersions.set(ref.toString(), [prevOV[1]]);
         } else {
-          prevList.unshift(prevOV);
+          prevList.unshift(prevOV[1]);
         }
       }
     }
-    this.indirectObjects.set(ref, object);
+    this.indirectObjects.set(ref.toString(), [ref, object]);
     if (ref.objectNumber > this.largestObjectNumber) {
       this.largestObjectNumber = ref.objectNumber;
     }
@@ -144,18 +144,18 @@ class PDFContext {
   delete(ref: PDFRef): boolean {
     if (this.snapshot) this.snapshot.markDeletedRef(ref);
     if (this.preserveObjectsVersions) {
-      const object = this.indirectObjects.get(ref);
+      const object = this.indirectObjects.get(ref.toString());
       if (object) {
         // check is not already deleted
-        const verlist = this.objectsPreviousVersions.get(ref);
+        const verlist = this.objectsPreviousVersions.get(ref.toString());
         if (verlist) {
-          verlist.unshift(object);
+          verlist.unshift(object[1]);
         } else {
-          this.objectsPreviousVersions.set(ref, [object]);
+          this.objectsPreviousVersions.set(ref.toString(), [object[1]]);
         }
       }
     }
-    return this.indirectObjects.delete(ref);
+    return this.indirectObjects.delete(ref.toString());
   }
 
   lookupMaybe(ref: LookupKey, type: typeof PDFArray): PDFArray | undefined;
@@ -182,10 +182,13 @@ class PDFContext {
     // removed in next breaking API change.
     const preservePDFNull = types.includes(PDFNull);
 
-    const result = isPDFInstance(ref, PDFClasses.PDFRef)
-      ? this.indirectObjects.get(ref as PDFRef)
-      : ref;
-
+    let result;
+    if (isPDFInstance(ref, PDFClasses.PDFRef)) {
+      const iobj = this.indirectObjects.get((ref as PDFRef).toString());
+      result = iobj ? iobj[1] : undefined;
+    } else {
+      result = ref;
+    }
     if (
       !result ||
       (isPDFInstance(result, PDFClasses.PDFNull) && !preservePDFNull)
@@ -222,9 +225,13 @@ class PDFContext {
   ): PDFString | PDFHexString;
 
   lookup(ref: LookupKey, ...types: any[]) {
-    const result = isPDFInstance(ref, PDFClasses.PDFRef)
-      ? this.indirectObjects.get(ref as PDFRef)
-      : ref;
+    let result;
+    if (isPDFInstance(ref, PDFClasses.PDFRef)) {
+      const iobj = this.indirectObjects.get((ref as PDFRef).toString());
+      result = iobj ? iobj[1] : undefined;
+    } else {
+      result = ref;
+    }
 
     if (types.length === 0) return result;
 
@@ -247,7 +254,7 @@ class PDFContext {
   }
 
   getObjectRef(pdfObject: PDFObject): PDFRef | undefined {
-    const entries = Array.from(this.indirectObjects.entries());
+    const entries = Array.from(this.indirectObjects.values());
     for (let idx = 0, len = entries.length; idx < len; idx++) {
       const [ref, object] = entries[idx];
       if (object === pdfObject) {
@@ -259,7 +266,7 @@ class PDFContext {
   }
 
   enumerateIndirectObjects(): [PDFRef, PDFObject][] {
-    return Array.from(this.indirectObjects.entries()).sort(
+    return Array.from(this.indirectObjects.values()).sort(
       byAscendingObjectNumber,
     );
   }
@@ -456,7 +463,7 @@ class PDFContext {
   }
 
   private findContainingIndirectObject(target: PDFObject): PDFRef | undefined {
-    const entries = Array.from(this.indirectObjects.entries());
+    const entries = Array.from(this.indirectObjects.values());
     for (let idx = 0, len = entries.length; idx < len; idx++) {
       const [ref, object] = entries[idx];
       if (this.objectContains(object, target)) {
@@ -489,7 +496,7 @@ class PDFContext {
 
   getObjectVersions(ref: PDFRef): PDFObject[] {
     if (!this.preserveObjectsVersions) return [];
-    const list = this.objectsPreviousVersions.get(ref);
+    const list = this.objectsPreviousVersions.get(ref.toString());
     if (list) return list;
     return [];
   }

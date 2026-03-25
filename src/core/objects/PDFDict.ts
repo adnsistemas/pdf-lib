@@ -10,9 +10,11 @@ import PDFStream from './PDFStream';
 import PDFString from './PDFString';
 import PDFContext from '../PDFContext';
 import CharCodes from '../syntax/CharCodes';
-import { PDFClasses } from '../../api/objects';
+import { isPDFInstance, PDFClasses } from '../../api/objects';
 
 export type DictMap = Map<PDFName, PDFObject>;
+// dictionary keys must be unique, using PDFName does not guarantee that
+type InternalDictMap = Map<string, [PDFName, PDFObject]>;
 
 class PDFDict extends PDFObject {
   static className = () => PDFClasses.PDFDict;
@@ -26,31 +28,33 @@ class PDFDict extends PDFObject {
 
   readonly context: PDFContext;
 
-  private readonly dict: DictMap;
+  private readonly dict: InternalDictMap;
 
   suppressEncryption: boolean = false;
 
   protected constructor(map: DictMap, context: PDFContext) {
     super();
-    this.dict = map;
+    this.dict = new Map(
+      Array.from(map.entries()).map((entry) => [entry[0].toString(), entry]),
+    );
     this.context = context;
   }
 
   keys(): PDFName[] {
-    return Array.from(this.dict.keys());
+    return Array.from(this.dict.values()).map((value) => value[0]);
   }
 
   values(): PDFObject[] {
-    return Array.from(this.dict.values());
+    return Array.from(this.dict.values()).map((value) => value[1]);
   }
 
   entries(): [PDFName, PDFObject][] {
-    return Array.from(this.dict.entries());
+    return Array.from(this.dict.values());
   }
 
   set(key: PDFName, value: PDFObject): void {
     this.registerChange();
-    this.dict.set(key, value);
+    this.dict.set(key.asString(), [key, value]);
   }
 
   get(
@@ -59,14 +63,20 @@ class PDFDict extends PDFObject {
     // removed in next breaking API change.
     preservePDFNull = false,
   ): PDFObject | undefined {
-    const value = this.dict.get(key);
-    if (value === PDFNull && !preservePDFNull) return undefined;
-    return value;
+    if (!key.asString) return undefined;
+    const value = this.dict.get(key.asString());
+    if (
+      !value ||
+      (isPDFInstance(value[1], PDFClasses.PDFNull) && !preservePDFNull)
+    )
+      return undefined;
+    return value[1];
   }
 
   has(key: PDFName): boolean {
-    const value = this.dict.get(key);
-    return value !== undefined && value !== PDFNull;
+    if (!key.asString) return false;
+    const value = this.dict.get(key.asString());
+    return value !== undefined && !isPDFInstance(value[1], PDFClasses.PDFNull);
   }
 
   lookupMaybe(key: PDFName, type: typeof PDFArray): PDFArray | undefined;
@@ -110,7 +120,8 @@ class PDFDict extends PDFObject {
       ...types,
     ) as any;
 
-    if (value === PDFNull && !preservePDFNull) return undefined;
+    if (isPDFInstance(value, PDFClasses.PDFNull) && !preservePDFNull)
+      return undefined;
 
     return value;
   }
@@ -154,18 +165,19 @@ class PDFDict extends PDFObject {
       ...types,
     ) as any;
 
-    if (value === PDFNull && !preservePDFNull) return undefined;
+    if (isPDFInstance(value, PDFClasses.PDFNull) && !preservePDFNull)
+      return undefined;
 
     return value;
   }
 
   delete(key: PDFName): boolean {
     this.registerChange();
-    return this.dict.delete(key);
+    return this.dict.delete(key.asString());
   }
 
   asMap(): Map<PDFName, PDFObject> {
-    return new Map(this.dict);
+    return new Map(this.dict.values());
   }
 
   /** Generate a random key that doesn't exist in current key set */

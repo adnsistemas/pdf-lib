@@ -1737,24 +1737,23 @@ export default class PDFDocument {
     const upind = this.context.xrefs.length - lastUpdateMinusX - 1;
     const entries = this.context.listXrefEntries(upind);
     if (!entries.length) return [];
-    const changed = new Map<PDFRef, PDFObjectVersions>();
+    const changed = new Map<string, PDFObjectVersions>();
     for (const entry of entries) {
       const ref = entry.ref;
-      changed.set(ref, {
+      changed.set(ref.toString(), {
         ref,
         actual: entry.deleted ? undefined : this.context.lookup(ref),
         previous: this.context.getObjectVersions(ref),
       });
     }
     // if not the las update, then check objects later modified and adjust PDFObjectVersions accordingly
-    if (!lastUpdateMinusX)
-      return Array.from(changed.entries()).map((value) => value[1]);
+    if (!lastUpdateMinusX) return Array.from(changed.values());
     while (lastUpdateMinusX) {
       lastUpdateMinusX -= 1;
       const upind = this.context.xrefs.length - lastUpdateMinusX - 1;
       const nentries = this.context.listXrefEntries(upind);
       for (const nentry of nentries) {
-        const oce = changed.get(nentry.ref);
+        const oce = changed.get(nentry.ref.toString());
         if (oce && oce.actual) {
           oce.actual = oce.previous[0];
           oce.previous = oce.previous.slice(1);
@@ -1762,9 +1761,9 @@ export default class PDFDocument {
       }
     }
     // if PDF has errors, it may happen to end with objects that has no current, nor previous versions
-    return Array.from(changed.entries())
-      .map((value) => value[1])
-      .filter((ov) => ov.actual || ov.previous.length);
+    return Array.from(changed.values()).filter(
+      (ov) => ov.actual || ov.previous.length,
+    );
   }
 
   /**
